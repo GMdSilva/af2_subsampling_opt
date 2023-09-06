@@ -68,7 +68,10 @@ def analyze_distributions(distributions: dict, rmsd_range, trials: list) -> dict
         bandwidth = get_silverman_bandwidth(distribution)
 
         # Analyze the current distribution for modality
-        mode_data = analyze_modes(distribution, rmsd_range, trials[i], bandwidth=bandwidth)
+        mode_data = analyze_modes(distribution,
+                                  rmsd_range,
+                                  trials[i],
+                                  bandwidth=bandwidth)
 
         # If multiple modes are detected, perform two-state analysis
         if mode_data['num_modes'] > 1:
@@ -210,7 +213,7 @@ def test_different_peaks(final_ranges: list,
             'range': peak_range,
             'results': result_dict_partial,
             'chosen_parameters': best_scoring,
-            'score': score
+            'score': score,
         }
         results.append(result_dict)
 

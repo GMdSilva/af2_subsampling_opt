@@ -58,7 +58,7 @@ def bulk_analysis(path_dirs: str,
             'trial': trial,
             "method": method,
             "selection": selection,
-            "reference": ref
+            "reference": ref,
         }
         all_results.append(result_dict)
 

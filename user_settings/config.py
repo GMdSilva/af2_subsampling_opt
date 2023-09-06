@@ -1,7 +1,8 @@
 """ User-configured values """
 
-PATH_PATTERN = "/Users/Gabriel/af2/examples/abl/wild-type"
-PREFIX = 'abl'
-REFERENCE_PATH = ''
-REINDEX = False
-FIRST_RESIDUE = 0
+from user_settings.new_config import load_config
+
+CONFIG = load_config()
+PREFIX = CONFIG['PREFIX']
+REINDEX = CONFIG['REINDEX']
+FIRST_RESIDUE = CONFIG['FIRST_RESIDUE']

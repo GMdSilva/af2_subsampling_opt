@@ -28,7 +28,7 @@ def plot_peaks(result: Dict[str, Any], peak_range: List[Tuple[int, int]]) -> Non
              label=result['trial'])
     plt.xlabel('Value (A)', fontsize=18)
     plt.ylabel('Density', fontsize=18)
-    plt.title(f'{str(PREFIX)}', fontsize=20)
+    plt.title(PREFIX, fontsize=20)
     plt.legend()
 
     for i, (start, end) in enumerate(peak_range):

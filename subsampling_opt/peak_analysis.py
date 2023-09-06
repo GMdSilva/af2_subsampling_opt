@@ -7,7 +7,6 @@ import numpy as np
 from scipy.signal import find_peaks
 from sklearn.neighbors import KernelDensity
 import matplotlib.pyplot as plt
-
 from user_settings.config import PREFIX
 
 
@@ -137,7 +136,8 @@ def analyze_modes(data: Union[List[float], np.ndarray],
     plt.tight_layout()
     save_path = os.path.join('results',
                              'plots',
-                             f"{PREFIX}_modes_{str(trial).split(':', maxsplit=1)[0]}_range{rmsd_range[0]}.png")
+                             f"{PREFIX}_modes_"
+                             f"{str(trial).split(':', maxsplit=1)[0]}_range{rmsd_range[0]}.png")
     plt.savefig(save_path)
 
     return {

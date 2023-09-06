@@ -6,7 +6,6 @@ import MDAnalysis as mda
 from MDAnalysis.analysis import rms, align
 import numpy as np
 
-from user_settings.config import REFERENCE_PATH
 from utilities.utilities import load_trajectory
 
 
@@ -31,7 +30,9 @@ def load_rmsd(prediction_results: mda.Universe,
 
 
 def load_rmsd_ref(prediction_results: mda.Universe,
-                  selection: str = 'protein and name CA') -> Dict[str, np.ndarray]:
+                  reference_path: str,
+                  selection: str = 'protein and name CA'
+                  ) -> Dict[str, np.ndarray]:
     """
     Calculates the RMSD using a reference for given predictions.
 
@@ -42,7 +43,6 @@ def load_rmsd_ref(prediction_results: mda.Universe,
     Returns:
     - Dictionary with RMSD analysis results using a reference.
     """
-    reference_path = REFERENCE_PATH
     ref = mda.Universe(reference_path)
     ref = ref.select_atoms(selection)
     pred_rmsd = rms.RMSD(prediction_results,
