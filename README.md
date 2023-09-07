@@ -11,7 +11,7 @@ Steps in bold have been implemented and are part of this codebase, other steps a
    
 2. Determine the initial range of max_seq:extra_seq MSA subsampling parameter values based on MSA depth (experimental)
 
-3. Systematically run AlphaFold2 through the colabfold_batch wrapper with chosen range of max_seq:extra_seq parameter values to make predictions for the target protein, 160 seeds per prediction
+**3**. Systematically run AlphaFold2 through the colabfold_batch wrapper with chosen range of max_seq:extra_seq parameter values to make predictions for the target protein, 160 seeds per prediction
 
 **4.** Analyze output ensembles using MDanalysis and identify patterns correlated to the accurate prediction of relative state populations
 
@@ -33,9 +33,9 @@ Steps in bold have been implemented and are part of this codebase, other steps a
 
 6. Build deep MSAs with jackhmmer for variants of target protein
    
-7. For each variant, run AlphaFold2 with the previously selected parameter set using the corresponding MSA built from 6
+**7**. For each variant, run AlphaFold2 with the previously selected parameter set using the corresponding MSA built from 6
    
-8. For each prediction ensemble, repeat the steps in 4 pertaining to peak detection, and contrast peak statistics with wild-type results
+**8**. For each prediction ensemble, repeat the steps in 4 pertaining to peak detection, and contrast peak statistics with wild-type results
     
 9. Group results based on their effects (if any) to the relative populations of predicted conformations
 
