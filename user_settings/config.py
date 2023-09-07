@@ -1,14 +1,11 @@
 """ User-configured values """
 
-from user_settings.new_config import load_config
-
-CONFIG = load_config()
-PATH = CONFIG['PATH']
-PREFIX = CONFIG['PREFIX']
-REINDEX = CONFIG['REINDEX']
-FIRST_RESIDUE = CONFIG['FIRST_RESIDUE']
-BUILD_MSA = CONFIG['BUILD_MSA']
-RUN_AF2 = CONFIG['RUN_AF2']
-OPTIMIZE_PARAMETERS = CONFIG['OPTIMIZE_PARAMETERS']
+PATH = "results\\predictions\\"
+REINDEX = False,
+FIRST_RESIDUE = 0
+BUILD_MSA = False
+RUN_AF2 = False
+OPTIMIZE_PARAMETERS = True
+TEST_MUTANTS = True
 JACKHMMER_PATH = ''
 COLABFOLDBATCH_PATH = ''

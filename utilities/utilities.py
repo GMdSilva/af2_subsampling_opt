@@ -146,7 +146,7 @@ def find_ranges(indices_list: List[int]) -> List[Tuple[int, int]]:
 
 def rename_files_recursively(directory_path: str, old_prefix: str, new_prefix: str) -> None:
     """
-    Rename files in a given directory and its subdirectories from a specified old prefix to a new prefix,
+    Rename files in a directory and its subdirectories from a specified prefix to a new prefix,
     specifically for files with names following the pattern: <prefix>_unrelaxed_rank_*.pdb.
 
     Parameters:

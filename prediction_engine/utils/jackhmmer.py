@@ -25,7 +25,7 @@ TQDM_BAR_FORMAT = '{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaini
 os.system("mkdir -m 777 --parents /tmp/ramdisk")
 os.system("mount -t tmpfs -o size=9G ramdisk /tmp/ramdisk")
 
-def run_hmmer(sequence, prefix):
+def run_hmmer(prefix, sequence):
     pickled_msa_path = f"{prefix}.jackhmmer.pickle"
     if os.path.isfile(pickled_msa_path):
         msas_dict = pickle.load(open(pickled_msa_path, "rb"))
