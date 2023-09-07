@@ -4,6 +4,7 @@ from pathlib import Path
 import pickle
 import glob
 import MDAnalysis as mda
+import os
 
 from user_settings.config import REINDEX, FIRST_RESIDUE
 
@@ -141,3 +142,44 @@ def find_ranges(indices_list: List[int]) -> List[Tuple[int, int]]:
 
     ranges.append((start_idx, end_idx))
     return ranges
+
+
+def rename_files_recursively(directory_path: str, old_prefix: str, new_prefix: str) -> None:
+    """
+    Rename files in a given directory and its subdirectories from a specified old prefix to a new prefix,
+    specifically for files with names following the pattern: <prefix>_unrelaxed_rank_*.pdb.
+
+    Parameters:
+    - directory_path (str): Path to the root directory containing the .pdb files.
+    - old_prefix (str): The old prefix in the filenames to be replaced.
+    - new_prefix (str): The new prefix to replace the old one.
+
+    Returns:
+    - None: The function prints out the renamed files.
+    """
+
+    # Use os.walk to iterate over each directory and its subdirectories
+    for dirpath, dirnames, filenames in os.walk(directory_path):
+        for filename in filenames:
+            # Check if the file has a .pdb extension
+            if filename.endswith(".pdb"):
+                # Construct the old pattern using the old prefix
+                old_pattern = f"{old_prefix}_unrelaxed_rank_"
+
+                # Check if the filename matches the old pattern
+                if old_pattern in filename:
+                    # Construct the new pattern using the new prefix
+                    new_pattern = f"{new_prefix}_unrelaxed_rank_"
+
+                    # Replace the old pattern with the new pattern in the filename
+                    new_filename = filename.replace(old_pattern, new_pattern)
+
+                    # Construct the full path for the old and new filenames
+                    old_file_path = os.path.join(dirpath, filename)
+                    new_file_path = os.path.join(dirpath, new_filename)
+
+                    # Rename the file
+                    os.rename(old_file_path, new_file_path)
+
+                    # Print the renaming action for confirmation
+                    print(f"Renamed {old_file_path} to {new_file_path}")

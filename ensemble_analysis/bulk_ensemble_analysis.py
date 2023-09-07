@@ -21,7 +21,7 @@ def extract_trial_name(folder: str) -> str:
     - Extracted trial name
     """
     trial = folder.split('_')
-    return f'{trial[-2]}:{trial[-1][:-1]}'
+    return f'{trial[-2]}:{trial[-1]}'
 
 
 def bulk_analysis(path_dirs: str,
