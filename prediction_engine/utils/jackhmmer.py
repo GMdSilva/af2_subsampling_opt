@@ -4,15 +4,14 @@ taken from the original AlphaFold distribution
 """
 
 import os
-from urllib import request
+import pickle
 from concurrent import futures
 from sys import version_info
-import pickle
+from urllib import request
 
+import tqdm.notebook
 from alphafold.data import parsers
 from alphafold.data.tools import jackhmmer
-import tqdm.notebook
-
 
 python_version = f"{version_info.major}.{version_info.minor}"
 os.environ['TF_FORCE_UNIFIED_MEMORY'] = '1'

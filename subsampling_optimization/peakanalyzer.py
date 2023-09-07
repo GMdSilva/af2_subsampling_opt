@@ -3,12 +3,15 @@ Defines a class that analyzes modes/peaks
     obtained from each subsampling parameter set.
 """
 
-from typing import Dict, List, Tuple, Union
 import os
+from typing import Dict, List, Tuple, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks
 from sklearn.neighbors import KernelDensity
-import matplotlib.pyplot as plt
+
+from utilities.utilities import save_to_pickle
 
 
 class PeakAnalyzer:
@@ -16,6 +19,7 @@ class PeakAnalyzer:
     Class that analyzes modes/peaks
         obtained from each subsampling parameter set.
     """
+
     def __init__(self, prefix: str, trial: str):
         """
         Args:
@@ -127,6 +131,7 @@ class PeakAnalyzer:
         """
         x_values, density = self.estimate_density(data, bandwidth)
         num_modes, pops, modes, peaks, threshold = self.find_modalities(density, x_values, quantile)
+
         plt.rcParams['font.size'] = 18
         plt.close()
         plt.plot(x_values, density, label=self.trial)
@@ -140,7 +145,9 @@ class PeakAnalyzer:
         label = str(self.trial).split(':', maxsplit=1)[0]
         save_path = os.path.join('results',
                                  'plots',
-                                 f"{self.prefix}_modes_{label}_range{rmsd_range[0]}.png")
+                                 f"{self.prefix}_modes_{label}"
+                                 f"_range{rmsd_range[0]}"
+                                 f"_{rmsd_range[1]}.png")
         plt.savefig(save_path)
         return {
             "num_modes": num_modes,
@@ -152,16 +159,17 @@ class PeakAnalyzer:
         }
 
     def two_state_analysis(self,
-                           mode_data: Dict[str, Union[int, float, List[float]]]) -> \
-            Dict[str, Union[int, float, List[float]]]:
+                           mode_data: Dict[str, Union[int, float, List[float]]],
+                           residue_range: str) -> Dict[str, Union[int, float, List[float]]]:
         """
         Analyze mode data for a system with two states.
 
         Args:
-            mode_data (dict): Dictionary containing mode information.
+            - mode_data (dict): Dictionary containing mode information.
+            - rmsd_range (str): Residue range corresponding to the analyzed data
 
         Returns:
-            dict: Analyzed results.
+            - dict: Analyzed results.
         """
         sorted_pops, sorted_peaks, sorted_modes = self.sort_peaks_by_population(mode_data)
         ground_state_population = sorted_pops[-1]
@@ -179,7 +187,8 @@ class PeakAnalyzer:
             'ground_peak': ground_state_peak,
             'alt1_peak': alt1_state_peak,
             'dist_ground_alt1': distance_between_peaks,
-            'distribution': mode_data['distribution']
+            'distribution': mode_data['distribution'],
+            'residue_range': residue_range
         }
 
     def mode_sanity_checks(self, modality_results: dict, rmsd_range: str) -> bool:
@@ -216,6 +225,17 @@ class PeakAnalyzer:
                   f"for parameter {self.trial} rejected: "
                   f"ground conformation has higher RMSD than alt1 conformation.")
             return False
+
         print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
               f"for parameter {self.trial} accepted ")
+
+        filename = f"accepted_{self.trial.split(':')[0]}_{self.trial.split(':')[1]}_" \
+                   f"{self.prefix}_range_{rmsd_range[0]}_" \
+                   f"{rmsd_range[1]}"
+
+        peaks_path = os.path.join("results",
+                                  "peaks",
+                                  filename)
+
+        save_to_pickle(peaks_path, modality_results)
         return True

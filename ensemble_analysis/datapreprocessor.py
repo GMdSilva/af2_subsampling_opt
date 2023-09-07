@@ -2,7 +2,7 @@
 Defines a class to preprocess structural observable data
 """
 
-from typing import List, Dict, Union, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 

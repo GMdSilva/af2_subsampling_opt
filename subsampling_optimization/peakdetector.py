@@ -2,7 +2,7 @@
 Defines a class to find top n peaks and calculate scores for them.
 """
 
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy.signal import find_peaks

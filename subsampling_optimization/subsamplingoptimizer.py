@@ -4,12 +4,12 @@ Defines a class that runs the subsampling parameter optimization pipeline,
     measuring the performance of each parameter set, and choosing the top ranked
 """
 import os
-import os.path
-from typing import List, Dict, Tuple, Any
+import re
+from typing import Any, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 
-from ensemble_analysis.utils.bulk_ensemble_analysis import bulk_analysis
+from ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from subsampling_optimization.peakdetector import PeakDetector
 from subsampling_optimization.predictionevaluator import PredictionEvaluator
 from utilities.utilities import find_common_ranges_with_wiggle, load_from_pickle
@@ -21,12 +21,19 @@ class SubsamplingOptimizer:
         starting at detecting peaks (modes), ranking them based on various criteria,
         measuring the performance of each parameter set, and choosing the top ranked
     """
-    def __init__(self, prefix: str):
+
+    def __init__(self, prefix: str,
+                 use_custom_range: bool = False,
+                 selection='protein and name CA'):
         """
         Args:
         - prefix (str): Usually the name of the target protein.
+        - use_custom_range (str): Wether to use custom residue range or not
+        - selection (List[Tuple[int, int]]): Custom residue range for analyzes
         """
         self.prefix = prefix
+        self.custom_range = use_custom_range
+        self.selection = selection
 
     def plot_peaks(self, result: Dict[str, Any], peak_range: List[Tuple[int, int]]) -> None:
         """
@@ -86,14 +93,20 @@ class SubsamplingOptimizer:
 
         return all_ranges_expanded
 
-    def analyze_predictions(self, path: str, method: str) -> list[dict]:
+    def analyze_predictions(self,
+                            method: str,
+                            selection: str = 'protein and name CA',
+                            trial: str = "256:512",
+                            bulk: bool = True) -> list[dict]:
         """
         Analyze a series of subsampled AF2 predictions
         by calculating MDanalysis observables
 
         Args:
-            path (str): Path to directory containing AF2 subsampling directories
-            method (str): Analysis method (e.g. RMSF, RMSD, etc.)
+            method (str): Analysis method (e.g. RMSF, RMSD, etc.).
+            selection (str): Residue range to run analysis on.
+            trial (str): Subsampling parameter being tested.
+            bulk (str): Run analysis per-folder or in bulk.
 
         Returns:
             subsampling_results (list[dict[str, str]]): list of dicts containing metadata
@@ -105,8 +118,21 @@ class SubsamplingOptimizer:
 
         file_exists = os.path.isfile(results_path)
 
+        if not bulk:
+            path = os.path.join('results',
+                                'predictions',
+                                f"{self.prefix}"
+                                f"_{trial.split(':')[0]}"
+                                f"_{trial.split(':')[1]}")
+        else:
+            path = os.path.join('results',
+                                'predictions',
+                                '')
+
         if not file_exists:
-            subsampling_results = bulk_analysis(self.prefix, path, method)
+            mdanalyzer = MDAnalysisRunner(path, self.prefix, selection)
+            subsampling_results = mdanalyzer.process_results(bulk=bulk,
+                                                             method=method)
         else:
             subsampling_results = load_from_pickle(results_path)
 
@@ -128,17 +154,53 @@ class SubsamplingOptimizer:
                 subsampling parameters and metadata about the prediction
 
         """
-        results_path = os.path.join("../results",
+        results_path = os.path.join("results",
                                     "mdanalysis_results",
                                     f"{self.prefix}_rmsd_results.pkl")
         file_exists = os.path.isfile(results_path)
-
-        if not file_exists:
-            final_ranges = self.get_final_ranges(subsampling_results)
-        else:
+        if self.custom_range:
+            final_ranges = self.selection
+        elif file_exists:
             final_ranges = load_from_pickle(results_path)
-
+        else:
+            final_ranges = self.get_final_ranges(subsampling_results)
         evaluator = PredictionEvaluator(self.prefix)
         subsampling_parameters = evaluator.final_subsampling_decision(final_ranges, path)
 
         return subsampling_parameters
+
+    def compare_conditions(self, trials, old_prefix: str = 'abl_wt') -> Dict[str, float]:
+        """
+        Compares conditions based on a given path and trials.
+
+        Parameters:
+        - trials: Another parameter (provide a meaningful description)
+        - old_prefix (str, optional): Prefix for older data. Defaults to 'abl_wt'.
+
+        Returns:
+        - differences (Dict[str:float]): Changes to relative state populations per mutation.
+        """
+
+        residue_range = self._extract_residue_range()
+        subsampling_results = self.analyze_predictions('rmsd', self.selection, bulk=False)
+        evaluator = PredictionEvaluator(self.prefix)
+        differences = evaluator.contrast_differences(subsampling_results[0],
+                                                     residue_range,
+                                                     trials,
+                                                     old_prefix)
+        return differences
+
+    def _extract_residue_range(self):
+        """
+        Extracts the residue range from the selection attribute.
+
+        Returns:
+        list of tuple: A list containing a single tuple
+            that denotes the start and end of the residue range.
+        """
+
+        match = re.search(r'(\d+):(\d+)', self.selection)
+        if match:
+            start, end = map(int, match.groups())
+            return [(start, end)]
+        return []

@@ -1,12 +1,8 @@
 """ Misc. scripts for different purposes """
-from typing import List, Tuple, Any
-from pathlib import Path
-import pickle
-import glob
-import MDAnalysis as mda
 import os
-
-from user_settings.config import REINDEX, FIRST_RESIDUE
+import pickle
+from pathlib import Path
+from typing import Any, List, Tuple
 
 
 def load_from_pickle(filename: Path) -> Any:
@@ -35,29 +31,6 @@ def save_to_pickle(filename: Path, data: Any) -> None:
         pickle.dump(data, file)
 
 
-def load_trajectory(path: str) -> mda.Universe:
-    """
-    Load a trajectory from a collection of PDB files using MDAnalysis.
-
-    Parameters:
-    - PATH_PATTERN (str): The glob pattern specifying the path to the PDB files.
-
-    Returns:
-    - MDAnalysis.Universe: The universe object containing the combined trajectory.
-    """
-
-    # Get list of sorted files
-    pdb_files = sorted(glob.glob(path + "/*unrelaxed_rank*.pdb"))
-
-    # Use the ChainReader to treat multiple files as a single trajectory
-    traj = mda.Universe(pdb_files[0], pdb_files, dt=1)
-    if REINDEX:
-        for i, residue in enumerate(traj.residues, start=FIRST_RESIDUE):
-            residue.resid = i
-
-    return traj
-
-
 def tuple_range_to_string(range_tuple: Tuple[int, int]) -> str:
     """
     Convert a tuple representing a range to a string in the format "start-end".
@@ -69,7 +42,7 @@ def tuple_range_to_string(range_tuple: Tuple[int, int]) -> str:
         str: String representation of the range in the format "start-end".
     """
     start, end = range_tuple
-    return f"{start}-{end}"
+    return f"{start}:{end}"
 
 
 def ranges_overlap(range_a: Tuple[int, int],

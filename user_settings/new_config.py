@@ -25,7 +25,8 @@ def set_config(prefix: str,
         "OPTIMIZE_PARAMETERS": optimize_parameters,
         "JACKHMMER_PATH": jackhmmer_path,
         "COLABFOLDBATCH_PATH": colabfoldbatch_path,
-        "TEST_MUTANTS": test_mutants
+        "TEST_MUTANTS": test_mutants,
+        "CUSTOM_RANGE": [],
     }
 
     with open("config.json", "w", encoding="utf-8") as config_file:

@@ -3,6 +3,7 @@ Defines a class for running subsampled AF2 with colabfold_batch.
 """
 
 import os
+
 from user_settings.config import COLABFOLDBATCH_PATH
 
 

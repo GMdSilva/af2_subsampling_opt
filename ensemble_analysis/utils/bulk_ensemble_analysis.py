@@ -1,12 +1,11 @@
 """Measures the structural observables for a range of AF2 prediction sets """
 
-from typing import List, Dict, Optional
-
 import glob
 import os
+from typing import Dict, List, Optional
 
-from utilities.utilities import save_to_pickle
 from ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
+from utilities.utilities import save_to_pickle
 
 
 def extract_trial_name(folder: str) -> str:
@@ -42,7 +41,7 @@ def bulk_analysis(prefix: str,
     Returns:
     - List of dictionaries containing analysis results.
     """
-    folders = [d for d in glob.glob(f'{path_dirs}/*') if os.path.isdir(d)]
+    folders = [d for d in glob.glob(f'{path_dirs}/{prefix}') if os.path.isdir(d)]
     all_results = []
 
     for folder in folders:
@@ -50,7 +49,7 @@ def bulk_analysis(prefix: str,
               f"max_seq {folder.split('_')[-2]}, "
               f"with selection: {selection}")
         trial = extract_trial_name(folder)
-        analysis_runner = MDAnalysisRunner(folder)
+        analysis_runner = MDAnalysisRunner(folder, selection)
         analysis_results = analysis_runner.analyze_predictions(method=method)
 
         result_dict = {

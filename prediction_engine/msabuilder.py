@@ -3,6 +3,7 @@ Defines class for building MSA for subsampled AF2 predictions using jackhmmer.
 """
 
 import os
+
 from user_settings.config import JACKHMMER_PATH
 
 

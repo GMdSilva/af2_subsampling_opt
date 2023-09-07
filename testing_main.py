@@ -3,18 +3,18 @@
 import os
 from glob import glob
 
-from user_settings.new_config import load_config
-from user_settings import config
-from subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
-from prediction_engine.msabuilder import MSABuilder
 from prediction_engine.af2runner import AF2Runner
+from prediction_engine.msabuilder import MSABuilder
+from subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
+from user_settings import config
+from user_settings.new_config import load_config
 
 
 if __name__ == "__main__":
 
-    target_prot = 'abl'
-    kind = "wt"
-    prefix = f"{target_prot}_{kind}"
+    TARGET_PROT = 'abl'
+    KIND = "wt"
+    prefix = f"{TARGET_PROT}_{KIND}"
 
     if config.BUILD_MSA:
         builder = MSABuilder(prefix, sequence="PLACEHLDER")
@@ -27,14 +27,22 @@ if __name__ == "__main__":
         predictor.run_subsampled_af2()
 
     if config.OPTIMIZE_PARAMETERS:
-        method = 'rmsf'
+        METHOD = 'rmsf'
         optimizer = SubsamplingOptimizer(prefix)
-        subsampling_results = optimizer.analyze_predictions(config.PATH, method)
+        subsampling_results = optimizer.analyze_predictions(METHOD)
         final_ranges = optimizer.get_optimized_parameters(config.PATH, subsampling_results)
 
     if config.TEST_MUTANTS:
+        all_mut_results = []
+        old_prefix = prefix
         muts = load_config('user_settings/mutants.json')
-        print(muts)
-
-        prefix = f"{target_prot}_{kind}"
-
+        mut_path = os.path.join('results',
+                                'predictions',
+                                '')
+        selection = final_ranges['ranges'][0]['selection']
+        trial = [[(final_ranges['parameters'])]]
+        for mut in muts:
+            prefix = mut
+            optimizer = SubsamplingOptimizer(prefix, use_custom_range=True, selection=selection)
+            mut_results = optimizer.compare_conditions(trials=trial)
+            all_mut_results.append(mut_results)

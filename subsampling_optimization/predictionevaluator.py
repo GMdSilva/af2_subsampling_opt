@@ -2,13 +2,14 @@
 Defines a class that scores each subsampling parameter set based on peak analysis.
 """
 
-from typing import Union, List
 import os
+from typing import List, Union, Dict
+
 import numpy as np
 
-from ensemble_analysis.utils.bulk_ensemble_analysis import bulk_analysis
+from ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from subsampling_optimization.peakanalyzer import PeakAnalyzer
-from utilities.utilities import tuple_range_to_string, load_from_pickle, save_to_pickle
+from utilities.utilities import load_from_pickle, save_to_pickle, tuple_range_to_string
 
 
 class PredictionEvaluator:
@@ -67,8 +68,34 @@ class PredictionEvaluator:
             bandwidth = analyzer.get_silverman_bandwidth(distribution)
             mode_data = analyzer.analyze_modes(distribution, rmsd_range, bandwidth)
             if mode_data['num_modes'] > 1:
-                analyzed_mode_data = analyzer.two_state_analysis(mode_data)
+                analyzed_mode_data = analyzer.two_state_analysis(mode_data,
+                                                                 rmsd_range)
                 analyzed_modes[trials[i]] = analyzed_mode_data
+            else:
+                print('only 1 mode found')
+        return analyzed_modes
+
+    def analyze_distribution(self, distributions: dict, rmsd_range: str, trials: list) -> dict:
+        """
+        Analyze a set of distributions for modality.
+
+        Parameters:
+        - distributions (dict): Dictionary containing distribution results.
+        - rmsd_range (str): RMSD range for the analysis.
+        - trials (list): List of trial identifiers.
+
+        Returns:
+        - dict: Analyzed modalities indexed by trial.
+        """
+        analyzed_modes = {}
+        analyzer = PeakAnalyzer(self.prefix, trials[0][0])
+
+        bandwidth = analyzer.get_silverman_bandwidth(distributions['results'])
+        mode_data = analyzer.analyze_modes(distributions['results'], rmsd_range, bandwidth)
+        if mode_data['num_modes'] > 1:
+            analyzed_mode_data = analyzer.two_state_analysis(mode_data,
+                                                             rmsd_range)
+            analyzed_modes[trials[0][0]] = analyzed_mode_data
         return analyzed_modes
 
     @staticmethod
@@ -170,8 +197,10 @@ class PredictionEvaluator:
         results = []
 
         for peak_range in final_ranges:
-            selection = f'resid {tuple_range_to_string(peak_range)} and backbone'
-            subsampling_results = bulk_analysis(self.prefix, path, selection=selection)
+            selection = f'resid {tuple_range_to_string(peak_range)} and name CA'
+            mdarunner = MDAnalysisRunner(path, self.prefix, selection)
+            subsampling_results = mdarunner.process_results(bulk=True,
+                                                            method='rmsd')
 
             trials = [d['trial'] for d in subsampling_results if 'trial' in d]
             values = [d['results'] for d in subsampling_results if 'results' in d]
@@ -203,11 +232,10 @@ class PredictionEvaluator:
     @staticmethod
     def create_parameters_dict(parameters: str, ranges: list, scores: list) -> dict:
         """Create a dictionary containing subsampling parameters."""
-        subsampling_parameters = parameters.split(':')
         sorted_indexes = np.argsort(scores)[::-1]
 
         return {
-            'parameters': subsampling_parameters[1],
+            'parameters': parameters,
             'ranges': np.array(ranges)[sorted_indexes],
             'scores': np.array(scores)[sorted_indexes]
         }
@@ -244,7 +272,7 @@ class PredictionEvaluator:
 
         if all_same_results:
             print(f'Unanimous Success! '
-                  f'Choosing {results[0]["chosen_parameters"].split(":")[0]}'
+                  f'Choosing {results[0]["chosen_parameters"]}'
                   f' as subsampling parameters')
             return self.create_parameters_dict(results[0]['chosen_parameters'],
                                                final_ranges,
@@ -252,7 +280,7 @@ class PredictionEvaluator:
 
         if not all_same_results:
             index = scores.index(max(scores))
-            print(f'Will use {results[index]["chosen_parameters"].split(":")[0]}'
+            print(f'Will use {results[index]["chosen_parameters"]}'
                   f' for analyzes')
             return self.create_parameters_dict(results[index]['chosen_parameters'],
                                                final_ranges,
@@ -260,3 +288,40 @@ class PredictionEvaluator:
 
         print('Failed :(')
         return {}
+
+    def contrast_differences(self,
+                             distribution: dict,
+                             rmsd_range: str,
+                             trials: str,
+                             old_prefix: str = 'abl_wt') -> Dict[str, float]:
+        """
+        Analyze and print the contrast differences between a given distribution and a control.
+
+        Parameters:
+        - distribution (dict): The distribution to be analyzed.
+        - rmsd_range (str): Residue range used to calculate the RMSD.
+        - trials (str): Trials to be processed.
+        - old_prefix (str, optional): Prefix for the control naming. Defaults to 'abl_wt'.
+
+        Returns:
+        - diff_dict Dict[str: float]: Dict containing the differences
+            between analyzed states from test and control predictions.
+        """
+
+        analyzed_modes = self.analyze_distribution(distribution, rmsd_range[0], trials)
+        # Extract necessary components from trials[0][0]
+        trial_part1, trial_part2 = trials[0][0].split(':')
+
+        # Construct control name
+        control_name = (f"accepted_{trial_part1}_{trial_part2}_"
+                        f"{old_prefix}_"
+                        f"range_{rmsd_range[0][0]}_{rmsd_range[0][1]}")
+
+        control_path = os.path.join("results", "peaks", control_name)
+        control = load_from_pickle(control_path)
+
+        print(f"Change in ground state population: "
+              f"{analyzed_modes[trials[0][0]]['ground_pop'] - control['ground_pop']}")
+        diff_dict = {self.prefix: {analyzed_modes[trials[0][0]]['ground_pop'] -
+                                   control['ground_pop']}}
+        return diff_dict
