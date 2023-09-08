@@ -169,38 +169,3 @@ class SubsamplingOptimizer:
 
         return subsampling_parameters
 
-    def compare_conditions(self, trials, old_prefix: str = 'abl_wt') -> Dict[str, float]:
-        """
-        Compares conditions based on a given path and trials.
-
-        Parameters:
-        - trials: Another parameter (provide a meaningful description)
-        - old_prefix (str, optional): Prefix for older data. Defaults to 'abl_wt'.
-
-        Returns:
-        - differences (Dict[str:float]): Changes to relative state populations per mutation.
-        """
-
-        residue_range = self._extract_residue_range()
-        subsampling_results = self.analyze_predictions('rmsd', self.selection, bulk=False)
-        evaluator = PredictionEvaluator(self.prefix)
-        differences = evaluator.contrast_differences(subsampling_results[0],
-                                                     residue_range,
-                                                     trials,
-                                                     old_prefix)
-        return differences
-
-    def _extract_residue_range(self):
-        """
-        Extracts the residue range from the selection attribute.
-
-        Returns:
-        list of tuple: A list containing a single tuple
-            that denotes the start and end of the residue range.
-        """
-
-        match = re.search(r'(\d+):(\d+)', self.selection)
-        if match:
-            start, end = map(int, match.groups())
-            return [(start, end)]
-        return []
