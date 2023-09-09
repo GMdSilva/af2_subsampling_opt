@@ -1,6 +1,6 @@
 """ User-configured values """
 
-PATH = "results\\predictions\\"
+PREDICTION_ROOT = "."
 REINDEX = False,
 FIRST_RESIDUE = 0
 BUILD_MSA = False
@@ -9,4 +9,5 @@ OPTIMIZE_PARAMETERS = True
 TEST_MUTANTS = True
 JACKHMMER_PATH = ''
 COLABFOLDBATCH_PATH = ''
+MSA_PATHS = ''
 

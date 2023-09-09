@@ -1,21 +1,17 @@
 """
 Program main flow
-    TODO: REPLACE ABL1 PLACEHOLDER CONSTANTS
-        WITH VARIABLES
 """
 
 
 import os
-from glob import glob
-from typing import List, Dict, Any
+from typing import Dict, Any
 
-from prediction_engine.af2runner import AF2Runner
-from prediction_engine.msabuilder import MSABuilder
-from subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
-from mutation_analysis.mutationanalyzer import MutationAnalyzer
+from src.prediction_engine.af2runner import AF2Runner
+from src.prediction_engine.msabuilder import MSABuilder
+from src.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
+from src.mutation_analysis.mutationanalyzer import MutationAnalyzer
+from src.utilities.utilities import load_from_pickle
 from user_settings import config
-from user_settings.new_config import load_config
-from utilities.utilities import save_to_pickle, load_from_pickle
 
 
 def build_msa(prefix: str) -> None:
@@ -42,9 +38,11 @@ def run_af2(prefix: str) -> None:
     Returns:
         None
     """
-    msa_path = os.path.join('results', 'msas', '')
-    msa_file = glob(os.path.join(msa_path, f"{prefix}_hmmer_*.a3m"))[0]
-    predictor = AF2Runner(prefix, msa_file)
+    msa_path = os.path.join(config.PREDICTION_ROOT,
+                            'results',
+                            'msas',
+                            f"{prefix}_hmmer.a3m")
+    predictor = AF2Runner(prefix, msa_path)
     predictor.run_subsampled_af2()
 
 
@@ -58,79 +56,41 @@ def optimize_parameters(prefix: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: A dictionary containing optimized parameters.
     """
+    predictions_path = os.path.join(config.PREDICTION_ROOT,
+                                    'results',
+                                    'predictions')
     method = 'rmsf'
     optimizer = SubsamplingOptimizer(prefix)
     subsampling_results = optimizer.analyze_predictions(method)
-    return optimizer.get_optimized_parameters(config.PATH, subsampling_results)
+    return optimizer.get_optimized_parameters(predictions_path,
+                                              subsampling_results)
 
 
-def load_or_generate_mut_results(prefix: str,
-                                 results_path: str,
-                                 final_ranges: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """
-    Loads or generates mutation results for a given prefix and range.
-
-    Args:
-        prefix (str): The prefix for the mutation analysis.
-        results_path (str): Path where the results are or should be saved.
-        final_ranges (Dict[str, Any]): The optimized parameters for subsampling.
-
-    Returns:
-        List[Dict[str, Any]]: A list of mutation results.
-    """
-    old_prefix = prefix
-    all_mut_results = []
-    file_exists = os.path.isfile(results_path)
-    if file_exists:
-        return load_from_pickle(results_path)
-    muts = load_config('user_settings/mutants.json')
-    for mut in muts:
-        prefix = mut
-        mut_analyzer = MutationAnalyzer(prefix,
-                                        final_ranges['ranges'][0]['selection'])
-        trial = [[(final_ranges['parameters'])]]
-        mut_results = mut_analyzer.compare_conditions(trials=trial,
-                                                      old_prefix=old_prefix)
-        all_mut_results.append(mut_results)
-    save_to_pickle(results_path, all_mut_results)
-    return all_mut_results
-
-
-def plot_mut_results(prefix: str,
-                     all_mut_results: List[Dict[str, Any]],
-                     final_ranges: Dict[str, Any]) -> None:
-    """
-    Plots mutation results for a given prefix and range.
-
-    Args:
-        prefix (str): The prefix for the mutation analysis.
-        all_mut_results (List[Dict[str, Any]]): A list of mutation results.
-        final_ranges (Dict[str, Any]): The optimized parameters for subsampling.
-
-    Returns:
-        None
-    """
-    mut_analyzer = MutationAnalyzer(prefix, final_ranges['ranges'][0]['selection'])
-    labels = ['ground_pop_diff', 'alt1_pop_diff', 'ground_pop_test', 'alt1_pop_test']
-    for label in labels:
-        mut_analyzer.plot_results(all_mut_results, label)
-
-
-def test_mutants(prefix: str, final_ranges: Dict[str, Any]) -> None:
+def test_mutants(prefix: str) -> None:
     """
     Handles mutation testing for a given prefix and optimized parameters.
 
     Args:
         prefix (str): The prefix for the mutation analysis.
-        final_ranges (Dict[str, Any]): The optimized parameters for subsampling.
 
     Returns:
         None
     """
-    filename = "abl_results"
-    results_path = os.path.join('results', 'mutation_analysis', filename)
-    all_mut_results = load_or_generate_mut_results(prefix, results_path, final_ranges)
-    plot_mut_results(prefix, all_mut_results, final_ranges)
+    analyzer = MutationAnalyzer(prefix)
+    results_filename = os.path.join(config.PREDICTION_ROOT,
+                                    'results',
+                                    'optimizer_results',
+                                    f"{prefix}_optimizer_results.pkl")
+    optimization_results = load_from_pickle(results_filename)
+    filename = f"{prefix}_mut_analysis_results.pkl"
+    results_path = os.path.join(config.PREDICTION_ROOT,
+                                'results',
+                                'optimizer_results',
+                                filename)
+    all_mut_results, mut_data = analyzer.load_or_generate_mut_results(
+                                                   results_path,
+                                                   optimization_results)
+    return analyzer.measure_accuracy(all_mut_results, mut_data)
 
 
 def main() -> None:
@@ -147,17 +107,26 @@ def main() -> None:
 
     if config.BUILD_MSA:
         build_msa(prefix)
+    else:
+        print("Skipping MSA building, "
+              "make sure that path to MSA is accurate in config file")
     if config.RUN_AF2:
         run_af2(prefix)
+    else:
+        print("Skipping Preliminary AF2 run, "
+              "make sure that path to Wild-Type Predictions "
+              "is accurate in config file")
     if config.OPTIMIZE_PARAMETERS:
-        final_ranges = optimize_parameters(prefix)
+        optimize_parameters(prefix)
     if config.TEST_MUTANTS:
         # muts = load_config('user_settings/mutants.json')
+        # old_prefix = prefix
         # for mut in muts:
         #     prefix = mut
         #     build_msa(prefix)
         #     run_af2(prefix)
-        test_mutants(prefix, final_ranges)
+        # prefix = old_prefix
+        accuracy = test_mutants(prefix)
 
 
 if __name__ == "__main__":

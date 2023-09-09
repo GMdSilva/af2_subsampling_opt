@@ -2,6 +2,7 @@
 
 import json
 import os
+from user_settings.config import PREDICTION_ROOT
 
 
 def set_config(prefix: str,
@@ -48,7 +49,8 @@ def load_config(filename="config.json"):
 
 def config_template(PREFIX):
 
-    set_config(PREFIX,
+    set_config(PREDICTION_ROOT,
+               PREFIX,
                os.path.join('results',
                             'predictions',
                             ''),
