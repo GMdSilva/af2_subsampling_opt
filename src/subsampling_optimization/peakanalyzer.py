@@ -227,9 +227,11 @@ class PeakAnalyzer:
         print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
               f"for parameter {self.trial} accepted ")
 
-        filename = f"accepted_{self.trial.split(':')[0]}_{self.trial.split(':')[1]}_" \
-                   f"{self.prefix}_range_{rmsd_range[0]}_" \
-                   f"{rmsd_range[1]}"
+        filename = f"{self.prefix}_accepted_" \
+                   f"{self.trial.split(':')[0]}_" \
+                   f"{self.trial.split(':')[1]}_" \
+                   f"range_{rmsd_range[0]}_" \
+                   f"{rmsd_range[1]}.pkl"
 
         peaks_path = os.path.join(PREDICTION_ROOT,
                                   "results",

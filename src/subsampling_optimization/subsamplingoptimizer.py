@@ -84,13 +84,22 @@ class SubsamplingOptimizer:
             subsampling_results (list[dict[str, str]]): list of dicts containing metadata
                 about each prediction and the calculated observables
         """
+        # Split based on "resid" and get the latter part
+        if selection != 'protein and name CA':
+            after_resid = selection.split("resid", 1)[1]
+            # Split the result based on "and name CA" and get the former part
+            resid = after_resid.split("and name CA", 1)[0].strip()
+            resid = resid.replace(":", "_")
+        else:
+            resid = 'all'
+
         if not bulk:
             path = os.path.join(PREDICTION_ROOT,
                                 'results',
                                 'optimizer_results',
                                 f"{self.prefix}"
                                 f"_{trial.split(':')[0]}_"
-                                f"_{trial.split(':')[1]}.pkl")
+                                f"_{trial.split(':')[1]}_{resid}_results.pkl")
             file_exists = os.path.isfile(path)
 
             if file_exists:

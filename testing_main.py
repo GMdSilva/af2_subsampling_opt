@@ -11,6 +11,7 @@ from src.prediction_engine.msabuilder import MSABuilder
 from src.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
 from src.mutation_analysis.mutationanalyzer import MutationAnalyzer
 from src.utilities.utilities import load_from_pickle
+from src.subsampling_optimization.statefinder import StateFinder
 from user_settings import config
 
 
@@ -65,7 +66,6 @@ def optimize_parameters(prefix: str) -> Dict[str, Any]:
     return optimizer.get_optimized_parameters(predictions_path,
                                               subsampling_results)
 
-
 def test_mutants(prefix: str) -> None:
     """
     Handles mutation testing for a given prefix and optimized parameters.
@@ -93,6 +93,25 @@ def test_mutants(prefix: str) -> None:
     return analyzer.measure_accuracy(all_mut_results, mut_data)
 
 
+def get_representative_structures(prefix: str) -> None:
+    """
+    Handles mutation testing for a given prefix and optimized parameters.
+
+    Args:
+        prefix (str): The prefix for the mutation analysis.
+
+    Returns:
+        None
+    """
+    finder = StateFinder(prefix)
+    results_filename = os.path.join(config.PREDICTION_ROOT,
+                                    'results',
+                                    'optimizer_results',
+                                    f"{prefix}_optimizer_results.pkl")
+    optimization_results = load_from_pickle(results_filename)
+    finder.find_pdb_files(optimization_results)
+
+
 def main() -> None:
     """
     Main function to coordinate the pipeline of building MSA,
@@ -118,6 +137,7 @@ def main() -> None:
               "is accurate in config file")
     if config.OPTIMIZE_PARAMETERS:
         optimize_parameters(prefix)
+    get_representative_structures(prefix)
     if config.TEST_MUTANTS:
         # muts = load_config('user_settings/mutants.json')
         # old_prefix = prefix
@@ -127,7 +147,6 @@ def main() -> None:
         #     run_af2(prefix)
         # prefix = old_prefix
         accuracy = test_mutants(prefix)
-
 
 if __name__ == "__main__":
     main()

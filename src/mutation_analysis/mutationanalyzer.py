@@ -72,9 +72,8 @@ class MutationAnalyzer(SubsamplingOptimizer):
         trial_part1, trial_part2 = trial[0][0].split(':')
 
         # Construct control name
-        wildtype_filename = (f"accepted_{trial_part1}_{trial_part2}_"
-                             f"{old_prefix}_"
-                             f"range_{residue_range[0]}_{residue_range[1]}")
+        wildtype_filename = (f"{old_prefix}_accepted_{trial_part1}_{trial_part2}_"
+                             f"range_{residue_range[0]}_{residue_range[1]}.pkl")
 
         # Load control data
         wildtype_path = os.path.join(config.PREDICTION_ROOT,
@@ -142,7 +141,8 @@ class MutationAnalyzer(SubsamplingOptimizer):
 
     def load_or_generate_mut_results(self,
                                      results_path: str,
-                                     optimization_results) -> List[Dict[str, Any]]:
+                                     optimization_results: dict)\
+            -> List[Dict[str, Any]]:
         """
         Loads or generates mutation vs. wildtype comparison
             for a list of mutants.
@@ -168,7 +168,6 @@ class MutationAnalyzer(SubsamplingOptimizer):
         if file_exists:
             all_mut_results = load_from_pickle(results_path)
             self.plot_mut_results(all_mut_results, mut_data)
-            print(all_mut_results)
             return all_mut_results, mut_data
 
         self.selection = optimization_results['ranges'][0]
@@ -270,7 +269,6 @@ class MutationAnalyzer(SubsamplingOptimizer):
                   'alt1_pop_diff': "Alt1 State Pop. Δ (%)",
                   'ground_pop_test': "Ground State Pop. (%)",
                   'alt1_pop_test': "Alt1 State Pop. (%)"}
-        print(self.prefix)
         plotter = Plotter(self.prefix, all_mut_results)
         for key, value in labels.items():
             pair = {key: value}

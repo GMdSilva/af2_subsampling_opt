@@ -50,7 +50,7 @@ class MDAnalysisRunner:
         pred_rmsd.run()
         return {'residues': pred_rmsd.results.rmsd[:, 1], 'results': pred_rmsd.results.rmsd[:, 3]}
 
-    def calc_rmsd_ref(self, traj, reference_path: str = "") -> Dict[str, np.ndarray]:
+    def calc_rmsd_ref(self, traj) -> Dict[str, np.ndarray]:
         """
         Calculates the RMSD using a reference for given predictions.
 
@@ -60,8 +60,8 @@ class MDAnalysisRunner:
         Returns:
         - Dictionary with RMSD analysis results using a reference.
         """
-        ref = mda.Universe(reference_path)
-        ref = ref.select_atoms(self.selection)
+        ref = mda.Universe(self.reference)
+        ref = ref.select_atoms('protein and name CA')
         pred_rmsd = rms.RMSD(traj,
                              ref,
                              select='protein and name CA',
@@ -187,7 +187,8 @@ class MDAnalysisRunner:
 
     def process_results(self, bulk: bool = True,
                         trial: str = '256:512',
-                        method: str = 'rmsd') -> dict:
+                        method: str = 'rmsd',
+                        label: str = None) -> dict:
         """
         Performs bulk analysis on multiple directories.
 
@@ -197,6 +198,13 @@ class MDAnalysisRunner:
         Returns:
         - List of dictionaries containing analysis results.
         """
+        if self.selection != 'protein and name CA':
+            after_resid = self.selection.split("resid", 1)[1]
+            # Split the result based on "and name CA" and get the former part
+            resid = after_resid.split("and name CA", 1)[0].strip()
+            resid = resid.replace(":", "_")
+        else:
+            resid = ''
         if bulk:
             folders = [d for d in glob(f'{self.path}/{self.prefix}*') if os.path.isdir(d)]
         else:
@@ -207,7 +215,6 @@ class MDAnalysisRunner:
                                     f"{trial.split(':')[0]}_"
                                     f"{trial.split(':')[1]}")]
         all_results = []
-
         for folder in folders:
             print(f"Analyzing {method} of {self.prefix} prediction, "
                   f"parameters {folder.split('_')[-2]}:{folder.split('_')[-1]}, "
@@ -231,8 +238,10 @@ class MDAnalysisRunner:
                                     'optimizer_results',
                                     f'{self.prefix}_'
                                     f'{method}_'
-                                    f"{folder.split('_')[-2]}_{folder.split('_')[-1]}"
-                                    f"_results.pkl")
+                                    f"{folder.split('_')[-2]}_{folder.split('_')[-1]}_"
+                                    f"{resid}_"
+                                    f"{label}_"
+                                    f"results.pkl")
             save_to_pickle(filename, all_results)
 
         if bulk:
