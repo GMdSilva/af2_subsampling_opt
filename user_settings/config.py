@@ -1,9 +1,9 @@
 """ User-configured values """
-
+from src.utilities.utilities import is_jupyter
 
 
 SYSTEM_NAME = 'abl_wt'
-p
+IS_JUPYTER = is_jupyter()
 PREDICTION_ROOT = "."
 FIRST_RESIDUE = 0
 REINDEX = False,

@@ -97,7 +97,7 @@ def test_mutants(prefix: str) -> None:
     return analyzer.measure_accuracy(all_mut_results, mut_data)
 
 
-def get_representative_structures(prefix, old_prefix: str) -> None:
+def get_representative_structures(prefix: str) -> None:
     """
     Handles mutation testing for a given prefix and optimized parameters.
 
@@ -115,8 +115,9 @@ def get_representative_structures(prefix, old_prefix: str) -> None:
 
     optimization_results = load_from_pickle(results_filename)
     finder.get_refs_and_compare(optimization_results)
-    comparer = ClusterComparer(prefix, optimization_results, old_prefix)
-    comparer.measure_mutation_effects(measure_accuracy=True)
+    comparer = ClusterComparer(prefix, optimization_results)
+    report = comparer.measure_mutation_effects(measure_accuracy=True)
+    print(report)
 
 
 def main() -> None:
@@ -146,15 +147,12 @@ def main() -> None:
         optimize_parameters(prefix)
     if config.TEST_MUTANTS:
         # muts = load_config('user_settings/mutants.json')
-        # old_prefix = prefix
         # for mut in muts:
         #     prefix = mut
         #     build_msa(prefix)
         #     run_af2(prefix)
-        # prefix = old_prefix
         accuracy = test_mutants(prefix)
-    old_prefix = 'abl_wt'
-    get_representative_structures(prefix, old_prefix)
+    get_representative_structures(prefix)
 
 if __name__ == "__main__":
     main()

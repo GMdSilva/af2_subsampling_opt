@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from user_settings.config import PREDICTION_ROOT
+from user_settings.config import PREDICTION_ROOT, IS_JUPYTER, SYSTEM_NAME
 
 
 class Plotter:
@@ -24,9 +24,9 @@ class Plotter:
         - data (Union(List, Dict)): List or dict containing the data to plot.
         - prefix (str): Usually, the name of the target protein
         """
+        plt.close()
         self.data = data
         self.prefix = prefix
-        plt.close()
 
         plt.rcParams['xtick.labelsize'] = 16  # x ticks
         plt.rcParams['ytick.labelsize'] = 16  # y ticks
@@ -38,8 +38,7 @@ class Plotter:
     def plot_rmsf_peaks(self,
                         subsampling_results: List[Dict],
                         peak_ranges: List[List[Tuple[int, int]]],
-                        save_plot: bool = True,
-                        show_plot: bool = True) -> None:
+                        save_plot: bool = True) -> None:
         """
         Plots peaks for the given results.
 
@@ -47,7 +46,6 @@ class Plotter:
         - subsampling_results: A list of data dictionaries.
         - peak_ranges: A list of peak range lists corresponding to each data set.
         - save_plot (bool): If plot is to be saved to disk or not.
-        - show_plot (bool): If plot is to be shown or not.
         """
         plt.close()
 
@@ -101,15 +99,14 @@ class Plotter:
                                  'results',
                                  'plots',
                                  f"{self.prefix}_rmsf_peak_detection.png")
-        if show_plot:
-            plt.show()
         if save_plot:
             plt.savefig(save_path)
+        if IS_JUPYTER:
+            plt.show()
 
     def plot_kde_with_modes(self,
                             residue_ranges: List[Tuple[int, int]],
-                            save_plot=True,
-                            show_plot=True) -> None:
+                            save_plot=True) -> None:
         """
         Plots Kernel Density Estimation (KDE) with mode peaks for a list of data sets.
 
@@ -166,7 +163,7 @@ class Plotter:
 
         plt.tight_layout()
 
-        if show_plot:
+        if IS_JUPYTER:
             plt.show()
 
         if save_plot:
@@ -177,18 +174,24 @@ class Plotter:
                                      f"_kde_modes.png")
             plt.savefig(save_path)
 
-    def plot_mut_analysis(self, x_values: Dict, mut_list: Dict) -> None:
+    def plot_mut_analysis(self,
+                          x_values: Dict,
+                          mut_list: Dict,
+                          known_ground_effects: bool = False,
+                          known_alt1_effects: bool = False) -> None:
         """
         Generate a bar plot based on mutation analysis.
 
         Parameters:
         - x_values (dict): A dictionary containing the key-value pairs for the x-axis.
         - mut_list (dict): A dictionary containing mutation details.
+        - known_ground_effects (bool): If effects on ground state are known or not.
+        - known_alt1_effects (bool): If effects on alt1 state are known or not.
 
         Returns:
         None. A bar plot is saved in the designated path.
         """
-
+        plt.close()
         ground_pop_diffs = [d[self.prefix][list(x_values.keys())[0]]
                             for d in self.data for self.prefix in d]
         labels = [entry['label'] for entry in mut_list.values()]
@@ -197,15 +200,20 @@ class Plotter:
         effects_alt1 = [entry['effect']['alt1_pop']
                         for entry in mut_list.values()]
 
-        if x_values == 'ground_pop_diff' or 'ground_pop_test':
-            colors = ['red' if effect == '-'
-                      else ('grey' if effect == "ref"
-                            else 'blue') for effect in effects_ground]
-        else:
-            colors = ['red' if effect == '-'
-                      else ('grey' if effect == "ref"
-                            else 'blue') for effect in effects_alt1]
+        colors = ['red' if ground_pop_diff < 0
+                  else ('grey' if ground_pop_diff == 0 else 'blue')
+                  for ground_pop_diff in ground_pop_diffs]
 
+        if known_ground_effects:
+            if x_values == 'ground_pop_diff' or 'ground_pop_test':
+                colors = ['red' if effect == '-'
+                          else ('grey' if effect == "ref"
+                                else 'blue') for effect in effects_ground]
+        if known_alt1_effects:
+            if x_values == 'alt1_pop_diff' or 'alt1_pop_test':
+                colors = ['red' if effect == '-'
+                          else ('grey' if effect == "ref"
+                                else 'blue') for effect in effects_alt1]
         # Plotting
         _, ax = plt.subplots()
         ax.barh(labels,
@@ -219,7 +227,7 @@ class Plotter:
         save_path = os.path.join(PREDICTION_ROOT,
                                  'results',
                                  'plots',
-                                 f"{self.prefix}_{list(x_values.keys())[0]}.png")
+                                 f"{SYSTEM_NAME}_{list(x_values.keys())[0]}.png")
         plt.savefig(save_path)
 
     def plot_multiple_scatter(self,
@@ -229,7 +237,6 @@ class Plotter:
                               annotations=None,
                               colors=None,
                               colorbar_label=None,
-                              show_plot=True,
                               fontsize=10):
         """
         Creates a separate scatter plot for each dataset,
@@ -244,7 +251,7 @@ class Plotter:
             for each data point in the datasets.
         - colorbar_label (str): Label for the colorbar.
         """
-
+        plt.close()
         # If labels are not provided, use default labels
         if labels is None:
             labels = [f"Dataset {i + 1}" for i in range(len(data_list))]
@@ -316,5 +323,41 @@ class Plotter:
                                      'plots',
                                      f"{self.prefix}_mutants_ground_vs_alt1.png")
             plt.savefig(save_path)
-        if show_plot:
+        if IS_JUPYTER:
             plt.show()
+
+    def plot_bar_for_state(self, state, mut_list, known_ground_effects = False):
+        plt.close()
+        labels = list(self.data.keys())
+        values = []
+        for label in labels:
+            values.append(self.data[label][state])
+
+        colors = ['red' if value < 0
+                  else ('grey' if value == 0 else 'blue')
+                  for value in values]
+
+        if known_ground_effects:
+            if state == 'Ground':
+                effects_ground = [entry['effect']['ground_pop']
+                                  for entry in mut_list.values()]
+
+                colors = ['red' if effect == '-'
+                          else ('grey' if effect == "ref"
+                                else 'blue') for effect in effects_ground]
+
+        # Plotting
+        _, ax = plt.subplots()
+        ax.barh(labels,
+                values,
+                color=colors)
+        ax.set_xlabel(f"{state} State Pop. Δ (%)")
+        ax.set_ylabel('')
+        ax.set_title('')
+
+        plt.tight_layout()
+        save_path = os.path.join(PREDICTION_ROOT,
+                                 'results',
+                                 'plots',
+                                 f"{SYSTEM_NAME}_{state}_diff_2danalysis.png")
+        plt.savefig(save_path)

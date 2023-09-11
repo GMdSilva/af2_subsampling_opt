@@ -7,12 +7,14 @@ import glob
 import os
 import warnings
 
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-
 from kneed import KneeLocator
 
+from user_settings.config import SYSTEM_NAME, IS_JUPYTER
+from user_settings.new_config import load_config
 from user_settings.config import PREDICTION_ROOT
 from src.utilities.plotter import Plotter
 from src.subsampling_optimization.statefinder import StateFinder
@@ -30,17 +32,15 @@ class ClusterComparer(StateFinder):
     the ground or alternative states.
     """
 
-    def __init__(self, prefix: str, optimization_results: dict, old_prefix: str) -> None:
+    def __init__(self, prefix: str, optimization_results: dict) -> None:
         """
         Initialize the ClusterComparer instance.
 
         Args:
         - prefix (str): Usually the name of the protein being studied.
         - optimization_results (dict): Results obtained after optimization.
-        - old_prefix (str): Previous prefix.
         """
         self.prefix = prefix
-        self.old_prefix = old_prefix
         self.selection: str = 'protein and name CA'
         self.wildtype_results: dict = None
         self.rmsd_dict = self.get_refs_and_compare(optimization_results)
@@ -53,16 +53,15 @@ class ClusterComparer(StateFinder):
         - np.ndarray: A 2D numpy array containing wildtype results.
         """
         wildtype_tuple = (
-            self.rmsd_dict['ground'][self.old_prefix][0]['results'],
-            self.rmsd_dict['alt1'][self.old_prefix][0]['results']
+            self.rmsd_dict['ground'][SYSTEM_NAME][0]['results'],
+            self.rmsd_dict['alt1'][SYSTEM_NAME][0]['results']
         )
         return np.column_stack(wildtype_tuple)
 
-    def find_optimal_clusters(self,
-                              wildtype_results: np.ndarray,
+    @staticmethod
+    def find_optimal_clusters(wildtype_results: np.ndarray,
                               plot_results: bool = True,
-                              save_results: bool = True,
-                              show_plot: bool = True) -> int:
+                              save_results: bool = True) -> int:
         """
         Find optimal number of clusters using the elbow method.
 
@@ -70,7 +69,6 @@ class ClusterComparer(StateFinder):
         - wildtype_results (np.ndarray): A 2D numpy array containing wildtype results.
         - plot_results (bool, optional): If True, plots the elbow curve. Defaults to True.
         - save_results (bool, optional): If True, saves the elbow curve plot. Defaults to True.
-        - show_plot (bool, optional): If True, show plot
 
         Returns:
         - int: Optimal number of clusters determined by the elbow method.
@@ -96,13 +94,13 @@ class ClusterComparer(StateFinder):
             plt.plot(k_tests, distortions, 'bo-')
             plt.xlabel('Number of Clusters')
             plt.ylabel('Distortion')
-            plt.title(f'Elbow Method showing optimal k for {self.old_prefix}')
+            plt.title(f'Elbow Method showing optimal k for {SYSTEM_NAME}')
             if save_results:
                 plt.savefig(os.path.join(PREDICTION_ROOT,
                                          'results',
                                          'plots',
-                                         f"{self.old_prefix}_kmeans_elbow_test.png"))
-            if show_plot:
+                                         f"{SYSTEM_NAME}_kmeans_elbow_test.png"))
+            if IS_JUPYTER:
                 plt.show()
 
         # Using kneed library to find the elbow point
@@ -158,7 +156,10 @@ class ClusterComparer(StateFinder):
         self._plot_cluster_data(all_rmsd_measurements, clustering_results)
 
         # Generate report, with optional accuracy measurement
-        self._generate_report(measure_accuracy, all_rmsd_measurements, clustering_results)
+        report = self._generate_report(measure_accuracy,
+                                       all_rmsd_measurements,
+                                       clustering_results)
+        return report
 
     def build_wt_model(self) -> Tuple[KMeans, np.ndarray]:
         """
@@ -222,12 +223,13 @@ class ClusterComparer(StateFinder):
                                              all_rmsd_measurements['results_effects'],
                                              clustering_results['results'])
 
-            self.build_report(clustering_results['wt_pct'],
-                              clustering_results['results'],
-                              accuracy_report=accuracy)
+            report = self.build_report(clustering_results['wt_pct'],
+                                       clustering_results['results'],
+                                       accuracy_report=accuracy)
         else:
-            self.build_report(clustering_results['wt_evaluation'],
-                              clustering_results['results'])
+            report = self.build_report(clustering_results['wt_pct'],
+                                       clustering_results['results'])
+        return report
 
     def _get_clustering_results(self,
                                 all_rmsd_measurements: Dict[str, List],
@@ -305,36 +307,168 @@ class ClusterComparer(StateFinder):
             'all_clusters': mut_evaluation
         }
 
-    def build_report(self,
-                     wt_evaluation: Union[List[str], Tuple[str, ...]],
-                     clustering_results: dict,
-                     accuracy_report: Optional[dict] = None) -> None:
+    @staticmethod
+    def load_and_sort_mut_data() -> Tuple[Dict[str, dict], List[str]]:
         """
-        Build and print a report for clustering results and optionally, an accuracy report.
-
-        Parameters:
-        - wt_evaluation (Union[List[str], Tuple[str, ...]]): Evaluations for the wild-type data.
-        - clustering_results (dict): Dictionary containing clustering results and evaluations.
-        - accuracy_report (Optional[dict]): Optional dictionary containing accuracy measurements.
-                If provided, additional information will be added to the report.
+        Load and sort mutation data from a predefined configuration.
 
         Returns:
-        - None. The report is printed to the console.
+            Tuple containing sorted mutation data and mutation data names.
         """
+        mut_data = load_config('user_settings/mutants.json')
+        sorted_mut_data = dict(sorted(mut_data.items(), key=lambda item: item[1]["rank"]))
+        mut_data_names = [data['label'] for data in sorted_mut_data.values()]
+        return sorted_mut_data, mut_data_names
 
+    def compute_results(self, clustering_results: Dict[str, Tuple[List[float], List[float]]]) \
+            -> Tuple:
+        """
+        Compute total and differential results based on clustering results.
+
+        Args:
+            clustering_results: Dictionary containing clustering results.
+
+        Returns:
+            A tuple containing dictionaries of total and differential results,
+            lists of states and labels, and counts of ground up and ground down values.
+        """
+        total_results = {}
+        diff_results = {}
+        states = set()
+        labels_up = []
+        labels_down = []
+        count_ground_up = 0
+        count_ground_down = 0
+
+        # Assuming every label has the same number of states
+        total_measurements = sum(next(iter(clustering_results.values()))[1])
+
+        for label, (diff_vals, total_vals) in clustering_results.items():
+            total_results[label] = self.calculate_population(total_vals,
+                                                             total_measurements)
+            diff_res, ground_up, ground_down =\
+                self.calculate_population_difference(diff_vals, total_measurements)
+
+            if ground_up:
+                count_ground_up += 1
+                labels_up.append(label)
+            if ground_down:
+                count_ground_down += 1
+                labels_down.append(label)
+
+            diff_results[label] = diff_res
+            states.update(diff_res.keys())
+
+        return total_results,\
+               diff_results,\
+               list(states),\
+               labels_up,\
+               labels_down,\
+               count_ground_up,\
+               count_ground_down
+
+    @staticmethod
+    def calculate_population(values: List[float], total_measurements: float) -> Dict[str, float]:
+        """
+        Calculate population percentages from the given values.
+
+        Args:
+            values: List of population values.
+            total_measurements: Total measurement value.
+
+        Returns:
+            Dictionary with state labels and their respective population percentages.
+        """
+        return {f"S{s}" if s else "Ground":
+                    (val / total_measurements) * 100 for s, val in enumerate(values)}
+
+    @staticmethod
+    def calculate_population_difference(values: List[float],
+                                        total_measurements: float) -> Tuple:
+        """
+        Calculate population differences from the given values.
+
+        Args:
+            values: List of population values.
+            total_measurements: Total measurement value.
+
+        Returns:
+            Tuple containing dictionary with state labels and their respective population differences, and
+            two booleans indicating ground up and ground down values.
+        """
+        ground_up, ground_down = False, False
+        results = {}
+        for s, val in enumerate(values):
+            state = f"S{s}" if s else "Ground"
+            results[state] = (val / total_measurements) * 100
+
+            if s == 0:
+                ground_up = val > 0
+                ground_down = val < 0
+
+        return results, ground_up, ground_down
+
+    def build_report(self, wt_evaluation: Union[List[str], Tuple[str, ...]],
+                     clustering_results: Dict[str, Tuple[List[float], List[float]]],
+                     accuracy_report: Optional[Dict[str, Union[float, List[str]]]] = None) -> None:
+        """
+        Build and print a report based on clustering results, and optionally an accuracy report.
+
+        Args:
+            wt_evaluation: Evaluations for the wild-type data.
+            clustering_results: Dictionary containing clustering results and evaluations.
+            accuracy_report: Optional dictionary containing accuracy measurements.
+
+        Returns:
+            None. The report is printed to the console.
+        """
+        sorted_mut_data,\
+        mut_data_names = self.load_and_sort_mut_data()
+        total_results,\
+        diff_results,\
+        states,\
+        labels_up,\
+        labels_down,\
+        count_ground_up,\
+        count_ground_down = self.compute_results(clustering_results)
+
+        plotter = Plotter(SYSTEM_NAME, diff_results)
+        for state in states:
+            plotter.plot_bar_for_state(state, sorted_mut_data)
+
+        report_dict = {
+            'System Name': SYSTEM_NAME,
+            'Optimized max_seq': self.trial.split('_')[0],
+            'Optimized extra_seq': self.trial.split('_')[1],
+            'C-Alpha Selection': f"{self.selection.split('_')[0]}:"
+                                 f"{self.selection.split('_')[1]}",
+            'Detected WT States': len(wt_evaluation),
+            'WT Ground Population': wt_evaluation[0].split(':')[1],
+            'Alternative State Populations': wt_evaluation[1:],
+            '# Tested Mutations': len(sorted_mut_data)-1,
+            'Tested Variants': mut_data_names,
+            '# Ground State Stabilizing Variants': count_ground_up,
+            '# Ground State Destabilizing Variants': count_ground_down,
+            'Ground State Stabilizing Variants': labels_up,
+            'Ground State Destabilizing Variants': labels_down,
+            'Relative State Populations': total_results,
+            'Relative State Population Differences': diff_results
+        }
+
+        # Extend the report if accuracy report is given
         if accuracy_report:
-            print(
-                f"When predicting {self.prefix} with optimized subsampling conditions"
-                f"{self.trial.split('_')[0]}:{self.trial.split('_')[1]},"
-                f"\nAF2 identified {len(wt_evaluation)} states "
-                f"defined by structural fluctuations in resids"
-                f"{self.selection.split('_')[0]}:{self.selection.split('_')[1]}. "
-                f"\nIn the wild-type prediction,"
-                f"the populations of these {len(wt_evaluation)} states "
-                f"are distributed as follows: \nGround: {wt_evaluation[0].split(':')[1]},"
-                f" \nAlternatives: {wt_evaluation[1:]}."
-                f"Representative structures for each state were saved to: \n"
-                f"")
+            report_dict.update({
+                'Accuracy %': accuracy_report['accuracy_%'],
+                'Correct Predictions': accuracy_report['correct_predictions'],
+                'Incorrect Predictions': accuracy_report['failed_predictions']
+            })
+        report_path = os.path.join('results',
+                                   'report',
+                                   f"{SYSTEM_NAME}_results_report.json")
+        # Writing JSON data to a file
+        with open(report_path, 'w') as file:
+            json.dump(report_dict, file)
+        return report_dict
 
     @staticmethod
     def measure_accuracy(labels: List[str],
@@ -384,7 +518,6 @@ class ClusterComparer(StateFinder):
             'correct_predictions': correct_predictions,
             'failed_predictions': failed_predictions,
         }
-
         return accuracy_report
 
     @staticmethod
@@ -409,8 +542,8 @@ class ClusterComparer(StateFinder):
         values_pct_joined = ' '.join(values_pct)
         return values_pct_joined, values_pct
 
-    def plot_cluster_results(self,
-                             all_rmsd_measurements: dict,
+    @staticmethod
+    def plot_cluster_results(all_rmsd_measurements: dict,
                              cluster_colors: List[str],
                              annotations: List[str]) -> None:
         """
@@ -424,7 +557,7 @@ class ClusterComparer(StateFinder):
         Returns:
         - None: The function performs plotting and does not return any value.
         """
-        plotter = Plotter(self.old_prefix, all_rmsd_measurements)
+        plotter = Plotter(SYSTEM_NAME, all_rmsd_measurements)
         plotter.plot_multiple_scatter(data_list=all_rmsd_measurements['results_tuples'],
                                       labels=all_rmsd_measurements['results_labels'],
                                       annotations=annotations,
@@ -457,6 +590,8 @@ class ClusterComparer(StateFinder):
         - None: The function saves the states and does not return any value.
         """
         for index, state in zip(centroid_indexes, states):
+            if state == 'S1':
+                state = 'ground_2d'
             path = self._construct_path(index)
             path = glob.glob(path)
             self._save_rep_states(path[0], state)

@@ -7,6 +7,7 @@ import pickle
 from pathlib import Path
 from typing import Any, List, Tuple
 
+
 def is_jupyter():
     try:
         # The `get_ipython` function is available in Jupyter environments, including IPython.
@@ -133,14 +134,16 @@ def find_ranges(indices_list: List[int]) -> List[Tuple[int, int]]:
     return ranges
 
 
-def rename_files_recursively(directory_path: str, old_prefix: str, new_prefix: str) -> None:
+def rename_files_recursively(directory_path: str,
+                             old_prefix: str,
+                             new_prefix: str) -> None:
     """
     Rename files in a directory and its subdirectories from a specified prefix to a new prefix,
     specifically for files with names following the pattern: <prefix>_unrelaxed_rank_*.pdb.
 
     Parameters:
     - directory_path (str): Path to the root directory containing the .pdb files.
-    - old_prefix (str): The old prefix in the filenames to be replaced.
+    - old_prefix (str): Value to replace.
     - new_prefix (str): The new prefix to replace the old one.
 
     Returns:

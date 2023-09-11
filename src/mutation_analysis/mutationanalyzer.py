@@ -31,16 +31,13 @@ class MutationAnalyzer(SubsamplingOptimizer):
         self.selection: str = 'protein and name CA'
         self.wildtype_results: dict = None
 
-    def compare_conditions(self,
-                           trial: str,
-                           old_prefix: str = 'abl_wt') -> Dict[str, float]:
+    def compare_conditions(self, trial: str) -> Dict[str, float]:
         """
         Compares results of different prediction conditions
             (usually wild-type vs. mutants)
 
         Parameters:
         - trial: Subsampling parameters used for predicting both conditions.
-        - old_prefix (str, optional): Prefix for older data. Defaults to 'abl_wt'.
 
         Returns:
         - differences (Dict[str:float]): Changes to relative state populations
@@ -51,20 +48,17 @@ class MutationAnalyzer(SubsamplingOptimizer):
         subsampling_results = self.analyze_predictions('rmsd', selection, bulk=False)
         differences = self.contrast_differences(subsampling_results,
                                                 residue_range,
-                                                trial,
-                                                old_prefix)
+                                                trial)
         return differences
 
     def get_control_values(self, trial: str,
-                           residue_range: str,
-                           old_prefix: str = 'abl_wt') -> dict:
+                           residue_range: str) -> dict:
         """
         Retrieve wild-type values based on the trials and rmsd_range.
 
         Parameters:
         - trial (str): Subsampling parameters used for predicting both conditions.
         - residue_range (str): Residue range used to calculate the RMSD.
-        - old_prefix (str, optional): Prefix for the wild-type naming.
             Defaults to 'abl_wt'.
         """
 
@@ -72,7 +66,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
         trial_part1, trial_part2 = trial[0][0].split(':')
 
         # Construct control name
-        wildtype_filename = (f"{old_prefix}_accepted_{trial_part1}_{trial_part2}_"
+        wildtype_filename = (f"{config.SYSTEM_NAME}_accepted_{trial_part1}_{trial_part2}_"
                              f"range_{residue_range[0]}_{residue_range[1]}.pkl")
 
         # Load control data
@@ -86,8 +80,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
     def contrast_differences(self,
                              distribution: dict,
                              residue_range: str,
-                             trial: str,
-                             old_prefix: str = 'abl_wt') -> dict:
+                             trial: str) -> dict:
         """
         Compares results of different prediction conditions
             (usually wild-type vs. mutants)
@@ -96,7 +89,6 @@ class MutationAnalyzer(SubsamplingOptimizer):
         - distribution (dict): Subsampling parameters used for predicting both conditions.
         - residue_range (str): Prefix for older data. Defaults to 'abl_wt'.
         - trial (str): Subsampling parameters used for predicting both conditions.
-        -- old_prefix (str, optional): Prefix for the wild-type naming.
 
         Returns:
         - differences (Dict[str:float]): Changes to relative state populations
@@ -108,7 +100,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
                                                          residue_range,
                                                          trial)
 
-        self.get_control_values(trial, residue_range, old_prefix)
+        self.get_control_values(trial, residue_range)
 
         # Extract values from the test and control datasets
         ground_pop_test = analyzed_modes[trial[0][0]]['ground_pop']
@@ -158,12 +150,10 @@ class MutationAnalyzer(SubsamplingOptimizer):
                 Results from the mutation vs. wt comparison.
             mut_data: Dict[str, Any]]: sorted mutation metadata
         """
-        old_prefix = self.prefix
         all_mut_results = []
         file_exists = os.path.isfile(results_path)
 
         mut_data = load_config('user_settings/mutants.json')
-
         mut_data = dict(sorted(mut_data.items(), key=lambda item: item[1]["rank"]))
 
         if file_exists:
@@ -176,8 +166,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
         for mut in mut_data:
             self.prefix = mut
             trial = [[(optimization_results['parameters'])]]
-            mut_results = self.compare_conditions(trial=trial,
-                                                  old_prefix=old_prefix)
+            mut_results = self.compare_conditions(trial=trial)
             all_mut_results.append(mut_results)
 
         self.plot_mut_results(all_mut_results, mut_data)
@@ -186,7 +175,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
 
     @staticmethod
     def measure_accuracy(mut_results: dict, mut_data: dict)\
-            -> List :
+            -> List:
         """
         Evaluates prediction results and measures accuracy
             for predicting the effects of mutations
@@ -219,7 +208,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
             accuracy = 0
             right_predictions, wrong_predictions = {}, {}
             for entry in data:
-                for key, value in entry.items():
+                for key, _ in entry.items():
                     if mut_data[key]['effect'][effect_key] == 'ref':
                         continue
 
