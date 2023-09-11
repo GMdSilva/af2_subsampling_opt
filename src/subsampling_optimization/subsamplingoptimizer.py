@@ -5,8 +5,10 @@ Defines a class that runs the subsampling parameter optimization pipeline,
 """
 import os
 from typing import Any, Dict, List, Tuple
+import json
+import numpy as np
 
-from user_settings.config import PREDICTION_ROOT
+from user_settings.config import PREDICTION_ROOT, SYSTEM_NAME
 from src.utilities.plotter import Plotter
 from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from src.subsampling_optimization.peakdetector import PeakDetector
@@ -134,8 +136,7 @@ class SubsamplingOptimizer:
 
         return subsampling_results
 
-    def get_optimized_parameters(self, path: str,
-                                 subsampling_results: list[dict]) -> None:
+    def analyze_parameter_set(self, subsampling_results: list[dict]) -> None:
         """
         Compute the variance of differences between adjacent in-between values
         for a bimodal distribution.
@@ -146,7 +147,7 @@ class SubsamplingOptimizer:
                 calculated with MDanalysis
 
         Returns:
-            None: saves results to disk.
+            final_ranges: RMSD ranges used for the analysis
 
         """
         results_path = os.path.join(PREDICTION_ROOT,
@@ -160,6 +161,9 @@ class SubsamplingOptimizer:
             final_ranges = load_from_pickle(results_path)
         else:
             final_ranges = self.get_final_ranges(subsampling_results)
+        return final_ranges
+
+    def make_final_decision(self, final_ranges, path):
         evaluator = PredictionEvaluator(self.prefix)
         subsampling_parameters = evaluator.final_subsampling_decision(final_ranges, path)
         final_results_path = os.path.join(PREDICTION_ROOT,
@@ -167,3 +171,27 @@ class SubsamplingOptimizer:
                                           "optimization_results",
                                           f"{self.prefix}_optimizer_results.pkl")
         save_to_pickle(final_results_path, subsampling_parameters)
+        subsampling_parameters = self._reformat_final_decision(subsampling_parameters)
+        return subsampling_parameters
+
+    @staticmethod
+    def _reformat_final_decision(final_decision):
+
+        def convert_np_arrays(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()  # Convert ndarray to list
+            raise TypeError(f"Object of type '{type(obj).__name__}' is not JSON serializable")
+
+        reformatted = {'System Name': SYSTEM_NAME,
+                       'max_seq': final_decision['parameters'].split(':')[0],
+                       'extra_seq': final_decision['parameters'].split(':')[1],
+                       'Highest Variation Range': final_decision['ranges'][0],
+                       'Score': final_decision['scores'][0]}
+        path_reports = os.path.join('results',
+                                    'reports',
+                                    f"{SYSTEM_NAME}_best_subsampling_parameters.json")
+
+        with open(path_reports, 'w') as file:
+            json.dump(reformatted, file, default=convert_np_arrays)
+
+        return reformatted

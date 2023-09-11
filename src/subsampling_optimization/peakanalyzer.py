@@ -11,7 +11,6 @@ from scipy.signal import find_peaks
 from sklearn.neighbors import KernelDensity
 
 from src.utilities.utilities import save_to_pickle
-from src.utilities.plotter import Plotter
 from user_settings.config import PREDICTION_ROOT
 
 

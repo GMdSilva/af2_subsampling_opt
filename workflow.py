@@ -2,9 +2,9 @@
 Program main flow
 """
 
-
 import os
 from typing import Dict, Any
+import logging
 
 from src.prediction_engine.af2runner import AF2Runner
 from src.prediction_engine.msabuilder import MSABuilder
@@ -14,6 +14,11 @@ from src.utilities.utilities import load_from_pickle
 from src.subsampling_optimization.statefinder import StateFinder
 from src.mutation_analysis.clustercomparer import ClusterComparer
 from user_settings import config
+
+def setup_logging():
+    # Set up basic logging configuration
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def build_msa(prefix: str) -> None:
@@ -26,6 +31,7 @@ def build_msa(prefix: str) -> None:
     Returns:
         None
     """
+    print("If jackhmmer is in path, building MSA.")
     builder = MSABuilder(prefix, sequence="PLACEHLDER")
     builder.build_jackhmmer_msa()
 
@@ -40,6 +46,7 @@ def run_af2(prefix: str) -> None:
     Returns:
         None
     """
+    print("If AlphaFold2 is in path, running predictions.")
     msa_path = os.path.join(config.PREDICTION_ROOT,
                             'results',
                             'msas',
@@ -48,24 +55,25 @@ def run_af2(prefix: str) -> None:
     predictor.run_subsampled_af2()
 
 
-def optimize_parameters(prefix: str) -> Dict[str, Any]:
-    """
-    Optimizes parameters for subsampling using the SubsamplingOptimizer.
+class OptimizerManager:
 
-    Args:
-        prefix (str): The prefix for the target protein sequence.
+    def __init__(self, prefix: str):
+        self.optimizer = SubsamplingOptimizer(prefix)
+        print("Starting Optimizer")
 
-    Returns:
-        Dict[str, Any]: A dictionary containing optimized parameters.
-    """
-    predictions_path = os.path.join(config.PREDICTION_ROOT,
-                                    'results',
-                                    'af2_predictions')
-    method = 'rmsf'
-    optimizer = SubsamplingOptimizer(prefix)
-    subsampling_results = optimizer.analyze_predictions(method)
-    return optimizer.get_optimized_parameters(predictions_path,
-                                              subsampling_results)
+    def get_parameter_set_variations(self):
+        print(f"Measuring structural regions of significant variation.")
+        significant_ranges = self.optimizer.analyze_predictions('rmsf')
+        return self.optimizer.analyze_parameter_set(significant_ranges)
+
+    def get_best_parameter_set(self, analyzed_parameter_set) -> Dict[str, Any]:
+        print(f"Ranking parameter sets based on scoring criteria.")
+        predictions_path = os.path.join(config.PREDICTION_ROOT,
+                                        'results',
+                                        'af2_predictions')
+        parameter_set = self.optimizer.make_final_decision(analyzed_parameter_set, predictions_path)
+        print(f'chosen parameters: {parameter_set}')
+        return parameter_set
 
 
 def test_mutants(prefix: str) -> None:
@@ -78,6 +86,7 @@ def test_mutants(prefix: str) -> None:
     Returns:
         None
     """
+    print(f"Testing mutants for system {prefix}.")
     analyzer = MutationAnalyzer(prefix)
     results_filename = os.path.join(config.PREDICTION_ROOT,
                                     'results',
@@ -107,7 +116,9 @@ def get_representative_structures(prefix: str) -> None:
     Returns:
         None
     """
-    finder = StateFinder(prefix)
+    print(f"Getting representative structures for system {prefix}.")
+    all_trials = ['16_32', '32_64', '64_128', '128_256', '256_512', '512_1024']
+    finder = StateFinder(prefix, all_trials)
     results_filename = os.path.join(config.PREDICTION_ROOT,
                                     'results',
                                     'optimization_results',
@@ -115,44 +126,18 @@ def get_representative_structures(prefix: str) -> None:
 
     optimization_results = load_from_pickle(results_filename)
     finder.get_refs_and_compare(optimization_results)
+
+
+def compare_mutation_clusters(prefix):
+    print(f"Comparing changes in cluster population for mutations of system {prefix}")
+    results_filename = os.path.join(config.PREDICTION_ROOT,
+                                    'results',
+                                    'optimization_results',
+                                    f"{prefix}_optimizer_results.pkl")
+    optimization_results = load_from_pickle(results_filename)
     comparer = ClusterComparer(prefix, optimization_results)
     report = comparer.measure_mutation_effects(measure_accuracy=True)
     print(report)
 
 
-def main() -> None:
-    """
-    Main function to coordinate the pipeline of building MSA,
-    running AF2, optimizing parameters, and testing mutants.
 
-    Returns:
-        None
-    """
-    target_prot = 'abl'
-    kind = "wt"
-    prefix = f"{target_prot}_{kind}"
-
-    if config.BUILD_MSA:
-        build_msa(prefix)
-    else:
-        print("Skipping MSA building, "
-              "make sure that path to MSA is accurate in config file")
-    if config.RUN_AF2:
-        run_af2(prefix)
-    else:
-        print("Skipping Preliminary AF2 run, "
-              "make sure that path to Wild-Type Predictions "
-              "is accurate in config file")
-    if config.OPTIMIZE_PARAMETERS:
-        optimize_parameters(prefix)
-    if config.TEST_MUTANTS:
-        # muts = load_config('user_settings/mutants.json')
-        # for mut in muts:
-        #     prefix = mut
-        #     build_msa(prefix)
-        #     run_af2(prefix)
-        accuracy = test_mutants(prefix)
-    get_representative_structures(prefix)
-
-if __name__ == "__main__":
-    main()

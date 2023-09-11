@@ -12,7 +12,7 @@ import numpy as np
 from MDAnalysis.analysis import align, rms
 
 from user_settings.config import FIRST_RESIDUE, REINDEX, PREDICTION_ROOT
-from src.utilities.utilities import save_to_pickle
+from src.utilities.utilities import save_to_pickle, load_from_pickle
 
 
 class MDAnalysisRunner:
@@ -141,6 +141,12 @@ class MDAnalysisRunner:
 
         return traj
 
+    @staticmethod
+    def _file_exists(path):
+        if os.path.isfile(path):
+            return True
+        return False
+
     def process_results(self, bulk: bool = True,
                         trial: str = '256:512',
                         method: str = 'rmsd',
@@ -170,25 +176,9 @@ class MDAnalysisRunner:
                                     f"{self.prefix}_"
                                     f"{trial.split(':')[0]}_"
                                     f"{trial.split(':')[1]}")]
+
         all_results = []
         for folder in folders:
-            print(f"Analyzing {method} of {self.prefix} prediction, "
-                  f"parameters {folder.split('_')[-2]}:{folder.split('_')[-1]}, "
-                  f"with selection: {self.selection}")
-            trial = self.extract_trial_name(folder)
-            traj = self.load_trajectory(folder)
-            analysis_results = self.analyze_predictions(traj, method=method)
-
-            result_dict = {
-                "results": analysis_results['results'],
-                'residues': analysis_results['residues'],
-                'trial': trial,
-                "method": method,
-                "selection": self.selection,
-                "reference": self.reference,
-            }
-            all_results.append(result_dict)
-
             if label is not None:
                 filename = os.path.join(PREDICTION_ROOT,
                                         'results',
@@ -208,6 +198,25 @@ class MDAnalysisRunner:
                                         f"{folder.split('_')[-2]}_{folder.split('_')[-1]}_"
                                         f"{resid}_"
                                         f"results.pkl")
+            if self._file_exists(filename):
+                return load_from_pickle(filename)
+
+            print(f"Analyzing {method} of {self.prefix} prediction, "
+                  f"parameters {folder.split('_')[-2]}:{folder.split('_')[-1]}, "
+                  f"with selection: {self.selection}")
+            trial = self.extract_trial_name(folder)
+            traj = self.load_trajectory(folder)
+            analysis_results = self.analyze_predictions(traj, method=method)
+
+            result_dict = {
+                "results": analysis_results['results'],
+                'residues': analysis_results['residues'],
+                'trial': trial,
+                "method": method,
+                "selection": self.selection,
+                "reference": self.reference,
+            }
+            all_results.append(result_dict)
             save_to_pickle(filename, all_results)
 
         if bulk:

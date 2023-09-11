@@ -66,6 +66,22 @@ class PredictionEvaluator:
         """
         analyzed_modes = {}
         analyzed_modes_l = []
+
+        path_results = (os.path.join('results',
+                        'misc_data',
+                        f"{self.prefix}_"
+                        f"{rmsd_range[0]}_"
+                        f"{rmsd_range[1]}_"
+                        f"modes_all_trials.pkl"))
+
+        if os.path.isfile(path_results):
+            saved_results = load_from_pickle(path_results)
+            analyzed_modes = saved_results[0]
+            analyzed_modes_l = saved_results[1]
+            plotter = Plotter(self.prefix, analyzed_modes_l)
+            plotter.plot_kde_with_modes(rmsd_range)
+            return analyzed_modes
+
         if isinstance(distributions, dict):
             for i, distribution in enumerate(distributions['results']):
                 analyzer = PeakAnalyzer(self.prefix, trials[i])
@@ -80,6 +96,8 @@ class PredictionEvaluator:
                 analyzed_modes_l.append(mode_data)
             plotter = Plotter(self.prefix, analyzed_modes_l)
             plotter.plot_kde_with_modes(rmsd_range)
+            results = [analyzed_modes, analyzed_modes_l]
+            save_to_pickle(os.path.join(path_results), results)
             return analyzed_modes
 
         analyzed_modes = {}
@@ -189,15 +207,6 @@ class PredictionEvaluator:
         Returns:
         - list: A list of dictionaries containing results for each peak range.
         """
-        results_path = os.path.join(PREDICTION_ROOT,
-                                    'results',
-                                    'optimization_results',
-                                    f"{self.prefix}_peak_selection_results.pkl")
-        file_exists = os.path.isfile(results_path)
-
-        if file_exists:
-            results = load_from_pickle(results_path)
-            return results
 
         results = []
         for peak_range in final_ranges:
@@ -253,16 +262,8 @@ class PredictionEvaluator:
         Returns:
         - dict: Dictionary containing the chosen parameters, their ranges, and scores.
         """
-        results_path = os.path.join(PREDICTION_ROOT,
-                                    "results",
-                                    "optimization_results",
-                                    f"{self.prefix}_peak_selection_results.pkl")
 
-        file_exists = os.path.isfile(results_path)
-        if not file_exists:
-            results = self.test_different_peaks(final_ranges, path)
-        else:
-            results = load_from_pickle(results_path)
+        results = self.test_different_peaks(final_ranges, path)
 
         all_same_results = all(x['chosen_parameters']
                                == results[0]['chosen_parameters']

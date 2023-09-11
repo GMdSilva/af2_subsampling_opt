@@ -146,7 +146,7 @@ class Plotter:
                        linestyle='--')
             ax.legend()
 
-            ax.set_xlabel('Residue #',
+            ax.set_xlabel('RMSD (A)',
                           weight='bold')
 
             # Only label the y-axis for the left-most subplots
@@ -224,6 +224,8 @@ class Plotter:
         ax.set_title('')
 
         plt.tight_layout()
+        if IS_JUPYTER:
+            plt.show()
         save_path = os.path.join(PREDICTION_ROOT,
                                  'results',
                                  'plots',
@@ -232,7 +234,8 @@ class Plotter:
 
     def plot_multiple_scatter(self,
                               data_list,
-                              save_path=True,
+                              filename = '_',
+                              save_plot=True,
                               labels=None,
                               annotations=None,
                               colors=None,
@@ -273,8 +276,8 @@ class Plotter:
         gs = gridspec.GridSpec(nrows,
                                ncols + 1,
                                width_ratios=[1] * ncols + [0.1],
-                               wspace=0.25,
-                               hspace=0.35)
+                               wspace=0.75,
+                               hspace=0.65)
 
         # Use a common color map
         cmap = plt.get_cmap('viridis')
@@ -301,6 +304,8 @@ class Plotter:
                             linewidth=1)
             ax.set_xlim(x_min, x_max)
             ax.set_ylim(y_min, y_max)
+            ax.set_xlabel("RMSD vs. G (A)", fontsize=15)
+            ax.set_ylabel("RMSD vs. S1 (A)", fontsize=15)
             ax.set_title(label, fontsize=15, weight='bold')
             ax.text(0.01,
                     .1,
@@ -317,11 +322,11 @@ class Plotter:
 
         # Set colorbar label if provided
             cbar.set_label(colorbar_label, fontsize=15)
-        if save_path:
+        if save_plot:
             save_path = os.path.join(PREDICTION_ROOT,
                                      'results',
                                      'plots',
-                                     f"{self.prefix}_mutants_ground_vs_alt1.png")
+                                     f"{self.prefix}_{filename}.png")
             plt.savefig(save_path)
         if IS_JUPYTER:
             plt.show()

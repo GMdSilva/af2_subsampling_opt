@@ -17,7 +17,7 @@ from user_settings.config import SYSTEM_NAME, IS_JUPYTER
 from user_settings.new_config import load_config
 from user_settings.config import PREDICTION_ROOT
 from src.utilities.plotter import Plotter
-from src.subsampling_optimization.statefinder import StateFinder
+from src.mutation_analysis.mutantstatefinder import MutantStateFinder
 
 
 warnings.filterwarnings("ignore",
@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore",
                         message='.*memory leak on Windows with MKL.*')
 
 
-class ClusterComparer(StateFinder):
+class ClusterComparer(MutantStateFinder):
     """
     Analyzes mutations and measures accuracy at predicting the effects of mutations in
     the ground or alternative states.
@@ -43,7 +43,7 @@ class ClusterComparer(StateFinder):
         self.prefix = prefix
         self.selection: str = 'protein and name CA'
         self.wildtype_results: dict = None
-        self.rmsd_dict = self.get_refs_and_compare(optimization_results)
+        self.rmsd_dict = self.get_refs_and_compare_muts(optimization_results)
 
     def get_wildtype_results(self) -> np.ndarray:
         """
@@ -155,7 +155,7 @@ class ClusterComparer(StateFinder):
         # Plot cluster results
         self._plot_cluster_data(all_rmsd_measurements, clustering_results)
 
-        # Generate report, with optional accuracy measurement
+        # Generate reports, with optional accuracy measurement
         report = self._generate_report(measure_accuracy,
                                        all_rmsd_measurements,
                                        clustering_results)
@@ -207,7 +207,7 @@ class ClusterComparer(StateFinder):
                          all_rmsd_measurements: dict,
                          clustering_results: dict) -> None:
         """
-        Generate a report based on the clustering results and optionally measure accuracy.
+        Generate a reports based on the clustering results and optionally measure accuracy.
 
         Parameters:
         - measure_accuracy (bool): A flag to determine if accuracy should be measured or not.
@@ -215,7 +215,7 @@ class ClusterComparer(StateFinder):
         - clustering_results (dict): Dictionary containing clustering results and evaluations.
 
         Returns:
-        - None. The function will internally call another function to handle report generation.
+        - None. The function will internally call another function to handle reports generation.
         """
 
         if measure_accuracy:
@@ -412,7 +412,7 @@ class ClusterComparer(StateFinder):
                      clustering_results: Dict[str, Tuple[List[float], List[float]]],
                      accuracy_report: Optional[Dict[str, Union[float, List[str]]]] = None) -> None:
         """
-        Build and print a report based on clustering results, and optionally an accuracy report.
+        Build and print a reports based on clustering results, and optionally an accuracy reports.
 
         Args:
             wt_evaluation: Evaluations for the wild-type data.
@@ -420,7 +420,7 @@ class ClusterComparer(StateFinder):
             accuracy_report: Optional dictionary containing accuracy measurements.
 
         Returns:
-            None. The report is printed to the console.
+            None. The reports is printed to the console.
         """
         sorted_mut_data,\
         mut_data_names = self.load_and_sort_mut_data()
@@ -455,7 +455,7 @@ class ClusterComparer(StateFinder):
             'Relative State Population Differences': diff_results
         }
 
-        # Extend the report if accuracy report is given
+        # Extend the reports if accuracy reports is given
         if accuracy_report:
             report_dict.update({
                 'Accuracy %': accuracy_report['accuracy_%'],
@@ -463,7 +463,7 @@ class ClusterComparer(StateFinder):
                 'Incorrect Predictions': accuracy_report['failed_predictions']
             })
         report_path = os.path.join('results',
-                                   'report',
+                                   'reports',
                                    f"{SYSTEM_NAME}_results_report.json")
         # Writing JSON data to a file
         with open(report_path, 'w') as file:
@@ -562,7 +562,8 @@ class ClusterComparer(StateFinder):
                                       labels=all_rmsd_measurements['results_labels'],
                                       annotations=annotations,
                                       colors=cluster_colors,
-                                      fontsize=7)
+                                      fontsize=7,
+                                      filename='mutations_clustered_wt')
 
     def _get_centroid_indices(self, cluster_centroids: np.ndarray) -> np.ndarray:
         """
