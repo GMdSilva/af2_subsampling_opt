@@ -118,8 +118,8 @@ class PeakAnalyzer:
 
     def analyze_modes(self,
                       data: Union[List[float], np.ndarray],
-                      rmsd_range: Union[List[float], np.ndarray],
-                      bandwidth: float = 0.1, quantile: float = 30) ->\
+                      bandwidth: float = 0.1,
+                      quantile: float = 30) ->\
             Dict[str, Union[int, float, List[float]]]:
         """
         Analyze the modality of a dataset using KDE and a quantile-based threshold.
@@ -137,17 +137,10 @@ class PeakAnalyzer:
 
         x_values, density = self.estimate_density(data, bandwidth)
         num_modes, pops, modes, peaks, threshold = self.find_modalities(density, x_values, quantile)
-        dict_for_plots = {
-                'density': density,
-                'x_values': x_values,
-                'threshold': threshold,
-                'peaks': peaks,
-                'trial': self.trial,
-                }
-        plotter = Plotter(self.prefix, dict_for_plots)
-        plotter.plot_kde_with_modes(rmsd_range)
-
         return {
+            "density": density,
+            "x_values": x_values,
+            "threshold": threshold,
             "num_modes": num_modes,
             "populations": pops,
             "modes": modes,
@@ -235,6 +228,7 @@ class PeakAnalyzer:
 
         peaks_path = os.path.join(PREDICTION_ROOT,
                                   "results",
+                                  "optimization_results",
                                   "peaks",
                                   filename)
 

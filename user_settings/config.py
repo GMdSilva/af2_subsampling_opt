@@ -1,8 +1,12 @@
 """ User-configured values """
 
+
+
+SYSTEM_NAME = 'abl_wt'
+p
 PREDICTION_ROOT = "."
-REINDEX = False,
 FIRST_RESIDUE = 0
+REINDEX = False,
 BUILD_MSA = False
 RUN_AF2 = False
 OPTIMIZE_PARAMETERS = True

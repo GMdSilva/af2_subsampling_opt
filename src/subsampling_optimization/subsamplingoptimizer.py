@@ -58,10 +58,9 @@ class SubsamplingOptimizer:
             detector = PeakDetector(result)
             peak_range = detector.detect_peaks(window_size, peak_thresh, peak_n)
             all_ranges.append(peak_range)
-            plotter = Plotter(self.prefix, result)
-            plotter.plot_rmsf_peaks(peak_range)
-
         all_ranges_expanded = find_common_ranges_with_wiggle(all_ranges)
+        plotter = Plotter(self.prefix, subsampling_results)
+        plotter.plot_rmsf_peaks(subsampling_results, all_ranges_expanded)
 
         return all_ranges_expanded
 
@@ -71,7 +70,7 @@ class SubsamplingOptimizer:
                             trial: str = "256:512",
                             bulk: bool = True) -> list[dict]:
         """
-        Analyze a series of sub-sampled AF2 predictions
+        Analyze a series of sub-sampled AF2 af2_predictions
         by calculating MDanalysis observables
 
         Args:
@@ -96,7 +95,7 @@ class SubsamplingOptimizer:
         if not bulk:
             path = os.path.join(PREDICTION_ROOT,
                                 'results',
-                                'optimizer_results',
+                                'misc_data',
                                 f"{self.prefix}"
                                 f"_{trial.split(':')[0]}_"
                                 f"_{trial.split(':')[1]}_{resid}_results.pkl")
@@ -107,7 +106,7 @@ class SubsamplingOptimizer:
                 return subsampling_results
             path = os.path.join(PREDICTION_ROOT,
                                 'results',
-                                'predictions',
+                                'af2_predictions',
                                 f"{self.prefix}"
                                 f"_{trial.split(':')[0]}_"
                                 f"_{trial.split(':')[1]}")
@@ -117,8 +116,8 @@ class SubsamplingOptimizer:
         else:
             path = os.path.join(PREDICTION_ROOT,
                                 "results",
-                                "optimizer_results",
-                                f"{self.prefix}_{method}_all_results.pkl")
+                                "misc_data",
+                                f"{self.prefix}_{method}_bulk_results.pkl")
 
             file_exists = os.path.isfile(path)
             if file_exists:
@@ -126,7 +125,7 @@ class SubsamplingOptimizer:
                 return subsampling_results
             path = os.path.join(PREDICTION_ROOT,
                                 'results',
-                                'predictions',
+                                'af2_predictions',
                                 '')
 
             mdanalyzer = MDAnalysisRunner(path, self.prefix, selection)
@@ -152,7 +151,7 @@ class SubsamplingOptimizer:
         """
         results_path = os.path.join(PREDICTION_ROOT,
                                     "results",
-                                    "optimizer_results",
+                                    "misc_data",
                                     f"{self.prefix}_rmsd_results.pkl")
         file_exists = os.path.isfile(results_path)
         if self.custom_range:
@@ -165,6 +164,6 @@ class SubsamplingOptimizer:
         subsampling_parameters = evaluator.final_subsampling_decision(final_ranges, path)
         final_results_path = os.path.join(PREDICTION_ROOT,
                                           "results",
-                                          "optimizer_results",
+                                          "optimization_results",
                                           f"{self.prefix}_optimizer_results.pkl")
         save_to_pickle(final_results_path, subsampling_parameters)

@@ -1,5 +1,5 @@
 """
-Defines class for building MSA for subsampled AF2 predictions using jackhmmer.
+Defines class for building MSA for subsampled AF2 af2_predictions using jackhmmer.
 """
 
 import os
@@ -9,7 +9,7 @@ from user_settings.config import JACKHMMER_PATH, PREDICTION_ROOT
 
 class MSABuilder:
     """
-    Class for building MSA for subsampled AF2 predictions using jackhmmer.
+    Class for building MSA for subsampled AF2 af2_predictions using jackhmmer.
     """
     def __init__(self, prefix: str, sequence: str = 'HLDERPLACE'):
         """

@@ -38,7 +38,7 @@ class MDAnalysisRunner:
 
     def calc_rmsd(self, traj) -> Dict[str, np.ndarray]:
         """
-        Calculates the Root Mean Square Deviation (RMSD) for given predictions.
+        Calculates the Root Mean Square Deviation (RMSD) for given af2_predictions.
             Uses the #1 ranked prediction (by pLDDT) as reference.
 
         Returns:
@@ -52,7 +52,7 @@ class MDAnalysisRunner:
 
     def calc_rmsd_ref(self, traj) -> Dict[str, np.ndarray]:
         """
-        Calculates the RMSD using a reference for given predictions.
+        Calculates the RMSD using a reference for given af2_predictions.
 
         Parameters:
         - reference_path: Path to reference structure.
@@ -71,7 +71,7 @@ class MDAnalysisRunner:
 
     def calc_rmsf(self, traj) -> Dict[str, np.ndarray]:
         """
-        Calculates the Root Mean Square Fluctuation (RMSF) for given predictions.
+        Calculates the Root Mean Square Fluctuation (RMSF) for given af2_predictions.
 
         Returns:
         - Dictionary with RMSF analysis results.
@@ -93,7 +93,7 @@ class MDAnalysisRunner:
 
         Parameters:
         - traj: Trajectory built from observables.
-        - method: Observable to measure in predictions (e.g. RMSD, distances, etc.)
+        - method: Observable to measure in af2_predictions (e.g. RMSD, distances, etc.)
 
         Returns:
         - Dictionary containing analysis results.
@@ -106,7 +106,8 @@ class MDAnalysisRunner:
             return self.calc_rmsd_ref(traj)
         raise ValueError(f"Unsupported analysis method: {method}")
 
-    def extract_trial_name(self, folder: str) -> str:
+    @staticmethod
+    def extract_trial_name(folder: str) -> str:
         """
         Extracts trial name from folder name.
 
@@ -119,7 +120,8 @@ class MDAnalysisRunner:
         trial = folder.split('_')
         return f'{trial[-2]}:{trial[-1]}'
 
-    def load_trajectory(self, path: str) -> mda.Universe:
+    @staticmethod
+    def load_trajectory(path: str) -> mda.Universe:
         """
         Load a trajectory from a collection of PDB files using MDAnalysis.
 
@@ -139,52 +141,6 @@ class MDAnalysisRunner:
 
         return traj
 
-    # def process_results(self, bulk: bool = True,
-    #                     trial: str = '256:512',
-    #                     method: str = 'rmsd') -> dict:
-    #     """
-    #     Processes analysis results either in bulk or for a specific trial.
-    #
-    #     Parameters:
-    #     - bulk (bool): If True, processes all directories in bulk.
-    #         Otherwise, processes a specific trial.
-    #     - trial (str): Specifies which trial to process if not in bulk mode.
-    #     - method (str): Observable to measure in predictions (e.g. RMSD, distances, etc.)
-    #
-    #     Returns:
-    #     - List of dictionaries containing analysis results.
-    #     """
-    #     if bulk:
-    #         all_results = self.bulk_process(method)
-    #     else:
-    #         all_results = []
-    #         print(f"Analyzing {method} of {self.prefix} prediction, "
-    #               f"parameters: {trial}, "
-    #               f"with selection: {self.selection}")
-    #
-    #         traj = self.load_trajectory(self.path)
-    #         analysis_results = self.analyze_predictions(traj, method=method)
-    #
-    #         result_dict = {
-    #             "results": analysis_results['results'],
-    #             'residues': analysis_results['residues'],
-    #             'trial': trial,
-    #             "method": method,
-    #             "selection": self.selection,
-    #             "reference": self.reference,
-    #         }
-    #         all_results.append(result_dict)
-    #
-    #         filename = os.path.join('results',
-    #                                 'optimizer_results',
-    #                                 f"{self.prefix}_{method}_"
-    #                                 f"{trial.split(':')[0]}_"
-    #                                 f"{trial.split(':')[1]}_"
-    #                                 f"results.pkl")
-    #         save_to_pickle(filename, all_results)
-    #
-    #     return all_results
-
     def process_results(self, bulk: bool = True,
                         trial: str = '256:512',
                         method: str = 'rmsd',
@@ -193,7 +149,7 @@ class MDAnalysisRunner:
         Performs bulk analysis on multiple directories.
 
         Parameters:
-        - method: Observable method for predictions
+        - method: Observable method for af2_predictions
 
         Returns:
         - List of dictionaries containing analysis results.
@@ -210,7 +166,7 @@ class MDAnalysisRunner:
         else:
             folders = [os.path.join(PREDICTION_ROOT,
                                     'results',
-                                    'predictions',
+                                    'af2_predictions',
                                     f"{self.prefix}_"
                                     f"{trial.split(':')[0]}_"
                                     f"{trial.split(':')[1]}")]
@@ -233,22 +189,32 @@ class MDAnalysisRunner:
             }
             all_results.append(result_dict)
 
-            filename = os.path.join(PREDICTION_ROOT,
-                                    'results',
-                                    'optimizer_results',
-                                    f'{self.prefix}_'
-                                    f'{method}_'
-                                    f"{folder.split('_')[-2]}_{folder.split('_')[-1]}_"
-                                    f"{resid}_"
-                                    f"{label}_"
-                                    f"results.pkl")
+            if label is not None:
+                filename = os.path.join(PREDICTION_ROOT,
+                                        'results',
+                                        'misc_data',
+                                        f'{self.prefix}_'
+                                        f'{method}_'
+                                        f"{folder.split('_')[-2]}_{folder.split('_')[-1]}_"
+                                        f"{resid}_"
+                                        f"{label}_"
+                                        f"results.pkl")
+            else:
+                filename = os.path.join(PREDICTION_ROOT,
+                                        'results',
+                                        'misc_data',
+                                        f'{self.prefix}_'
+                                        f'{method}_'
+                                        f"{folder.split('_')[-2]}_{folder.split('_')[-1]}_"
+                                        f"{resid}_"
+                                        f"results.pkl")
             save_to_pickle(filename, all_results)
 
         if bulk:
             filename = os.path.join(PREDICTION_ROOT,
                                     'results',
-                                    'optimizer_results',
-                                    f'{self.prefix}_{method}_all_results.pkl')
+                                    'misc_data',
+                                    f'{self.prefix}_{method}_bulk_results.pkl')
             save_to_pickle(filename, all_results)
 
         return all_results

@@ -68,7 +68,7 @@ class AF2Runner:
         Args:
         - parameters (list): List of parameter sets.
         """
-        result_path = os.path.join('../../results', 'predictions')
+        result_path = os.path.join('../../results', 'af2_predictions')
         for p_set in parameters:
             max_seq, extra_seq = p_set.split(':')
             command = (
@@ -80,10 +80,10 @@ class AF2Runner:
 
     def make_predictions(self):
         """
-        Generate predictions.
+        Generate af2_predictions.
         """
         if not os.path.isfile(COLABFOLDBATCH_PATH):
-            print('colabfoldbatch not found, not making predictions')
+            print('colabfoldbatch not found, not making af2_predictions')
             return
 
         parameters = self.build_parameter_range()
@@ -91,6 +91,6 @@ class AF2Runner:
 
     def run_subsampled_af2(self):
         """
-        Entry point function to generate subsampled AF2 predictions.
+        Entry point function to generate subsampled AF2 af2_predictions.
         """
         self.make_predictions()

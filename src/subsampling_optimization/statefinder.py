@@ -2,17 +2,17 @@
 Defines a class that finds and saves representative structures for each selected peak.
 """
 
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Union
 import os
-import numpy as np
 import glob
 import shutil
+import numpy as np
 
+from src.utilities.utilities import load_from_pickle
+from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from src.utilities.plotter import Plotter
 from user_settings.new_config import load_config
 from user_settings import config
-from src.utilities.utilities import load_from_pickle
-from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 
 
 class StateFinder:
@@ -42,19 +42,24 @@ class StateFinder:
                          f"{optimization_results['ranges'][0][1]}"
         self.trial = optimization_results['parameters'].replace(":", "_")
 
-    def get_reps(self, optimization_results: Dict[str, Any]) -> None:
+    def get_reps(self, optimization_results: Dict[str, Any]) -> dict:
         """
         Finds the representative structures for each peak.
         """
         self.get_variables(optimization_results)
         peak_calling_path = os.path.join(
-            config.PREDICTION_ROOT, 'results', 'peaks',
+            config.PREDICTION_ROOT,
+            'results',
+            'optimization_results',
+            'peaks',
             f"{self.prefix}_accepted_{self.trial}"
             f"_range_{self.selection}.pkl")
         peak_calling_results = load_from_pickle(peak_calling_path)
 
         rmsd_path = os.path.join(
-            config.PREDICTION_ROOT, 'results', 'optimizer_results',
+            config.PREDICTION_ROOT,
+            'results',
+            'misc_data',
             f"{self.prefix}_rmsd_{self.trial}_{self.selection}_results.pkl")
         rmsd_results = load_from_pickle(rmsd_path)
 
@@ -68,8 +73,8 @@ class StateFinder:
             rmsd_results[0]['results'], peak_calling_results['modes'][0])
         prediction_alt1 = rmsd_results[0]['residues'][index_alt]
 
-        return{'ground_ref_index': int(prediction_ground) + 1,
-               'alt1_ref_index': int(prediction_alt1) + 1}
+        return {'ground_ref_index': int(prediction_ground) + 1,
+                'alt1_ref_index': int(prediction_alt1) + 1}
 
     @staticmethod
     def _find_closest_index(results: np.ndarray, target_value: float) -> int:
@@ -85,7 +90,8 @@ class StateFinder:
         """
         return np.argmin(np.abs(results - target_value))
 
-    def find_pdb_files(self, optimization_results: Dict[str, int]) -> Tuple[List[str], List[str]]:
+    def get_refs_and_compare(self,
+                             optimization_results: Dict[str, int]) -> Tuple[List[str], List[str]]:
         """
         Finds PDB files based on optimization results.
 
@@ -106,7 +112,8 @@ class StateFinder:
         ground_files = glob.glob(ground_ref_path)
         alt1_files = glob.glob(alt1_ref_path)
 
-        labeled_files = list(zip(ground_files, ["ground"] * len(ground_files))) + \
+        labeled_files = list(zip(ground_files,
+                                 ["ground"] * len(ground_files))) + \
                         list(zip(alt1_files, ["alt1"] * len(alt1_files)))
 
         rmsds = {}
@@ -116,7 +123,6 @@ class StateFinder:
             rmsds[label] = rmsd
 
         self._plot_results(rmsds)
-
         return rmsds
 
     def _construct_path(self, index: int) -> str:
@@ -130,132 +136,172 @@ class StateFinder:
             str: The constructed file path.
         """
         formatted_index = str(index).zfill(3)
-        return os.path.join('results', 'predictions',
+        return os.path.join('results', 'af2_predictions',
                             f"{self.prefix}_{self.trial}",
                             f"{self.prefix}_unrelaxed_rank_{formatted_index}*.pdb")
 
-    def _save_rep_states(self, file, label):
-        # Define source and destination paths
-        dest_folder = os.path.join('results',
-                                   'references',
-                                   f"{self.prefix}_"
-                                   f"{self.trial}_"
-                                   f"{self.selection}_"
-                                   f"{label}.pdb")
+    def _save_rep_states(self, file: str, label: str) -> None:
+        """
+        Save representative states.
 
-        # Copy the file
+        Parameters:
+        - file (str): Path to the file.
+        - label (str): Label for the state.
+
+        Returns:
+        - None
+        """
+        dest_folder = os.path.join('results', 'references',
+                                   f"{self.prefix}_{self.trial}_{self.selection}_{label}.pdb")
         shutil.copy2(file, dest_folder)
 
-    def get_rmsd_vs_refs(self, file, label):
+    def get_rmsd_vs_refs(self, file: str, label: str) -> Dict[str, Union[str, List[str]]]:
+        """
+        Get RMSD against reference.
+
+        Parameters:
+        - file (str): Path to the file.
+        - label (str): Label for the state.
+
+        Returns:
+        - Dict[str, Union[str, List[str]]]: Dictionary of results.
+        """
         ref = file
         prefixes = self._get_prefixes()
-        path = os.path.join('results',
-                            'predictions')
+        path = os.path.join('results', 'af2_predictions')
         results = {}
-        rmsds = {}
         trial = self.trial.replace("_", ":")
         selection = f"resid {self.selection.replace('_', ':')} and name CA"
-
 
         for prefix in prefixes:
             file_exists = self._check_if_file_exists(prefix, label)
             if file_exists:
                 res = file_exists
             else:
-                runner = MDAnalysisRunner(path, prefix, selection, ref_name=ref)
+                runner = MDAnalysisRunner(path,
+                                          prefix,
+                                          selection,
+                                          ref_name=ref)
                 res = runner.process_results(bulk=False,
                                              trial=trial,
                                              method='rmsd_ref',
                                              label=label)
             results[prefix] = res
-
         return results
 
-    def _check_if_file_exists(self, prefix, label):
-        file_exists = os.path.join(config.PREDICTION_ROOT,
-                                   'results',
-                                   'optimizer_results',
-                                   f"{prefix}_rmsd_ref_"
-                                   f"{self.trial}_"
-                                   f"{self.selection}_"
-                                   f"{label}_"
-                                   f"results.pkl")
-        if os.path.exists(file_exists):
-            file = load_from_pickle(file_exists)
-            return file
+    @staticmethod
+    def _build_results_dict(rmsd_dict: Dict) -> Dict:
+        """
+        Build results dictionary from RMSD dictionary.
+
+        Parameters:
+        - rmsd_dict (Dict): RMSD dictionary.
+
+        Returns:
+        - Dict: Formatted results dictionary.
+        """
+        labels = StateFinder._get_mutation_names()
+        prefixes = StateFinder._get_prefixes()
+        effects = StateFinder._get_effects()
+
+        results_tuples, ranks = [], []
+
+        for prefix in prefixes:
+            result_tuple = (rmsd_dict['ground'][prefix][0]['results'],
+                            rmsd_dict['alt1'][prefix][0]['results'])
+            rank = [int(value) for value in rmsd_dict['ground'][prefix][0]['residues']]
+            ranks.append(rank)
+            results_tuples.append(result_tuple)
+
+        return {'results_tuples': results_tuples,
+                'results_ranks': ranks,
+                'results_labels': labels,
+                'results_effects': effects}
+
+    def _check_if_file_exists(self, prefix: str, label: str) -> Union[bool, Dict]:
+        """
+        Check if a specific file exists.
+
+        Parameters:
+        - prefix (str): Prefix of the file.
+        - label (str): Label for the file.
+
+        Returns:
+        - Union[bool, Dict]: F if file doesn't exist, else returns the file data.
+        """
+        file_path = os.path.join(config.PREDICTION_ROOT, 'results', 'misc_data',
+                                 f"{prefix}_rmsd_ref_"
+                                 f"{self.trial}_{self.selection}_{label}_"
+                                 f"results.pkl")
+        if os.path.exists(file_path):
+            return load_from_pickle(file_path)
         return False
 
     @staticmethod
-    def _sort_mut_list():
+    def _sort_mut_list() -> Dict:
+        """
+        Sort mutation list from configuration.
+
+        Returns:
+        - Dict: Sorted mutation list.
+        """
         mut_list = load_config(os.path.join(config.PREDICTION_ROOT,
                                             'user_settings',
                                             'mutants.json'))
-
-        mut_list = dict(sorted(mut_list.items(),
-                               key=lambda item: item[1]["rank"]))
-
-        return mut_list
+        return dict(sorted(mut_list.items(), key=lambda item: item[1]["rank"]))
 
     @staticmethod
-    def _get_prefixes():
-        mut_list = StateFinder._sort_mut_list()
+    def _get_prefixes() -> List[str]:
+        """
+        Extract prefixes from the sorted mutation list.
 
-        prefixes = []
-        for mut in mut_list:
-            prefixes.append(mut)
-
-        return prefixes
+        Returns:
+        - List[str]: List of prefixes.
+        """
+        return list(StateFinder._sort_mut_list().keys())
 
     @staticmethod
-    def _get_effects():
+    def _get_effects() -> List[str]:
+        """
+        Extract effects from the sorted mutation list.
+
+        Returns:
+        - List[str]: List of effect labels.
+        """
         muts_list = StateFinder._sort_mut_list()
         prefixes = StateFinder._get_prefixes()
 
         effects = []
         for prefix in prefixes:
             effect = muts_list[prefix]['effect']
-            effect_label = f"Ground: {str(effect['ground_pop'])} " \
-                           f"Alt1: {str(effect['alt1_pop'])}"
-            effects.append(effect_label)
+            effects.append(f"Ground: {effect['ground_pop']} Alt1: {effect['alt1_pop']}")
 
         return effects
 
     @staticmethod
-    def _get_mutation_names():
+    def _get_mutation_names() -> List[str]:
+        """
+        Extract mutation names from the sorted mutation list.
+
+        Returns:
+        - List[str]: List of mutation names.
+        """
         muts_list = StateFinder._sort_mut_list()
-        prefixes = StateFinder._get_prefixes()
+        return [muts_list[prefix]['label'] for prefix in StateFinder._get_prefixes()]
 
-        names = []
-        for prefix in prefixes:
-            name = muts_list[prefix]['label']
-            names.append(name)
+    def _plot_results(self, rmsds: Dict) -> None:
+        """
+        Plot results using RMSD data.
 
-        return names
+        Parameters:
+        - rmsds (Dict): RMSD data.
 
-    @staticmethod
-    def _get_mutation_names():
-        muts_list = StateFinder._sort_mut_list()
-        prefixes = StateFinder._get_prefixes()
-
-        names = []
-        for prefix in prefixes:
-            name = muts_list[prefix]['label']
-            names.append(name)
-
-        return names
-
-    def _plot_results(self, rmsd_dict):
-        labels = StateFinder._get_mutation_names()
-        prefixes = StateFinder._get_prefixes()
-        effects = StateFinder._get_effects()
-        dict = {}
-        tupls = []
-        for prefix in prefixes:
-            dict[f"{prefix}_vs_ground"] = rmsd_dict['ground'][prefix][0]['results']
-            dict[f"{prefix}_vs_alt1"] = rmsd_dict['alt1'][prefix][0]['results']
-            tupl = (rmsd_dict['ground'][prefix][0]['results'],
-                    rmsd_dict['alt1'][prefix][0]['results'])
-            tupls.append(tupl)
-        plotter = Plotter(self.prefix, tupls)
-        plotter.plot_multiple_scatter(tupls, labels, effects)
-
+        Returns:
+        - None
+        """
+        results_dict = self._build_results_dict(rmsds)
+        plotter = Plotter(self.prefix, results_dict['results_tuples'])
+        plotter.plot_multiple_scatter(data_list=results_dict['results_tuples'],
+                                      labels=results_dict['results_labels'],
+                                      annotations=results_dict['results_effects'],
+                                      colors=results_dict['results_ranks'])

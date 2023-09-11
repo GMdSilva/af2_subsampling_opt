@@ -52,7 +52,7 @@ def config_template(PREFIX):
     set_config(PREDICTION_ROOT,
                PREFIX,
                os.path.join('results',
-                            'predictions',
+                            'af2_predictions',
                             ''),
                reindex=False,
                first_residue=0,

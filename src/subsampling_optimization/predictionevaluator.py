@@ -11,6 +11,7 @@ from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from src.subsampling_optimization.peakanalyzer import PeakAnalyzer
 from src.utilities.utilities import load_from_pickle, save_to_pickle, range_to_string
 from user_settings.config import PREDICTION_ROOT
+from src.utilities.plotter import Plotter
 
 
 class PredictionEvaluator:
@@ -64,23 +65,28 @@ class PredictionEvaluator:
         - dict: Analyzed modalities indexed by trial.
         """
         analyzed_modes = {}
+        analyzed_modes_l = []
         if isinstance(distributions, dict):
             for i, distribution in enumerate(distributions['results']):
                 analyzer = PeakAnalyzer(self.prefix, trials[i])
                 bandwidth = analyzer.get_silverman_bandwidth(distribution)
-                mode_data = analyzer.analyze_modes(distribution, rmsd_range, bandwidth)
+                mode_data = analyzer.analyze_modes(distribution, bandwidth)
                 if mode_data['num_modes'] > 1:
                     analyzed_mode_data = analyzer.two_state_analysis(mode_data,
                                                                      rmsd_range)
                     analyzed_modes[trials[i]] = analyzed_mode_data
                 else:
                     raise ValueError('Only 1 mode :(')
+                analyzed_modes_l.append(mode_data)
+            plotter = Plotter(self.prefix, analyzed_modes_l)
+            plotter.plot_kde_with_modes(rmsd_range)
             return analyzed_modes
 
         analyzed_modes = {}
         analyzer = PeakAnalyzer(self.prefix, trials[0][0])
         bandwidth = analyzer.get_silverman_bandwidth(distributions[0]['results'])
-        mode_data = analyzer.analyze_modes(distributions[0]['results'], rmsd_range, bandwidth)
+        mode_data = analyzer.analyze_modes(distributions[0]['results'],
+                                           bandwidth)
         if mode_data['num_modes'] > 1:
             analyzed_mode_data = analyzer.two_state_analysis(mode_data,
                                                              rmsd_range)
@@ -185,7 +191,7 @@ class PredictionEvaluator:
         """
         results_path = os.path.join(PREDICTION_ROOT,
                                     'results',
-                                    'optimizer_results',
+                                    'optimization_results',
                                     f"{self.prefix}_peak_selection_results.pkl")
         file_exists = os.path.isfile(results_path)
 
@@ -219,7 +225,7 @@ class PredictionEvaluator:
         if save_to_disk:
             results_path = os.path.join(PREDICTION_ROOT,
                                         'results',
-                                        'optimizer_results',
+                                        'optimization_results',
                                         f"{self.prefix}_peak_selection_results.pkl")
             save_to_pickle(results_path, results)
 
@@ -249,7 +255,7 @@ class PredictionEvaluator:
         """
         results_path = os.path.join(PREDICTION_ROOT,
                                     "results",
-                                    "optimizer_results",
+                                    "optimization_results",
                                     f"{self.prefix}_peak_selection_results.pkl")
 
         file_exists = os.path.isfile(results_path)

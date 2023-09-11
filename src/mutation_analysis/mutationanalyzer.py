@@ -78,6 +78,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
         # Load control data
         wildtype_path = os.path.join(config.PREDICTION_ROOT,
                                      "results",
+                                     "optimization_results",
                                      "peaks",
                                      wildtype_filename)
         self.wildtype_results = load_from_pickle(wildtype_path)
@@ -204,7 +205,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
                                data: dict,
                                predictions_dict: dict) -> float:
             """
-            Calculates accuracy for total set of predictions
+            Calculates accuracy for total set of af2_predictions
 
             Args:
                 diff_key (str): Key to calculate accuracy on.

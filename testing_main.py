@@ -12,6 +12,7 @@ from src.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimiz
 from src.mutation_analysis.mutationanalyzer import MutationAnalyzer
 from src.utilities.utilities import load_from_pickle
 from src.subsampling_optimization.statefinder import StateFinder
+from src.mutation_analysis.clustercomparer import ClusterComparer
 from user_settings import config
 
 
@@ -59,12 +60,13 @@ def optimize_parameters(prefix: str) -> Dict[str, Any]:
     """
     predictions_path = os.path.join(config.PREDICTION_ROOT,
                                     'results',
-                                    'predictions')
+                                    'af2_predictions')
     method = 'rmsf'
     optimizer = SubsamplingOptimizer(prefix)
     subsampling_results = optimizer.analyze_predictions(method)
     return optimizer.get_optimized_parameters(predictions_path,
                                               subsampling_results)
+
 
 def test_mutants(prefix: str) -> None:
     """
@@ -79,21 +81,23 @@ def test_mutants(prefix: str) -> None:
     analyzer = MutationAnalyzer(prefix)
     results_filename = os.path.join(config.PREDICTION_ROOT,
                                     'results',
-                                    'optimizer_results',
+                                    'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
     optimization_results = load_from_pickle(results_filename)
+
     filename = f"{prefix}_mut_analysis_results.pkl"
     results_path = os.path.join(config.PREDICTION_ROOT,
                                 'results',
-                                'optimizer_results',
+                                'mutant_analysis',
                                 filename)
+
     all_mut_results, mut_data = analyzer.load_or_generate_mut_results(
                                                    results_path,
                                                    optimization_results)
     return analyzer.measure_accuracy(all_mut_results, mut_data)
 
 
-def get_representative_structures(prefix: str) -> None:
+def get_representative_structures(prefix, old_prefix: str) -> None:
     """
     Handles mutation testing for a given prefix and optimized parameters.
 
@@ -106,10 +110,13 @@ def get_representative_structures(prefix: str) -> None:
     finder = StateFinder(prefix)
     results_filename = os.path.join(config.PREDICTION_ROOT,
                                     'results',
-                                    'optimizer_results',
+                                    'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
+
     optimization_results = load_from_pickle(results_filename)
-    finder.find_pdb_files(optimization_results)
+    finder.get_refs_and_compare(optimization_results)
+    comparer = ClusterComparer(prefix, optimization_results, old_prefix)
+    comparer.measure_mutation_effects(measure_accuracy=True)
 
 
 def main() -> None:
@@ -137,7 +144,6 @@ def main() -> None:
               "is accurate in config file")
     if config.OPTIMIZE_PARAMETERS:
         optimize_parameters(prefix)
-    get_representative_structures(prefix)
     if config.TEST_MUTANTS:
         # muts = load_config('user_settings/mutants.json')
         # old_prefix = prefix
@@ -147,6 +153,8 @@ def main() -> None:
         #     run_af2(prefix)
         # prefix = old_prefix
         accuracy = test_mutants(prefix)
+    old_prefix = 'abl_wt'
+    get_representative_structures(prefix, old_prefix)
 
 if __name__ == "__main__":
     main()
