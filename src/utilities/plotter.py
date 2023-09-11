@@ -232,7 +232,7 @@ class Plotter:
 
     def plot_multiple_scatter(self,
                               data_list,
-                              save_path=None,
+                              save_path=True,
                               labels=None,
                               annotations=None,
                               colors=None,
