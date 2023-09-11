@@ -4,12 +4,14 @@ A suite for automatically detecting the best MSA subsampling parameters for the 
 
 This is a work in progress. Below is an example of one possible workflow using this method in which no prior information about a protein system is necessary but its sequence and the sequences of its variants of interest.
 
+https://github.com/GMdSilva/af2_subsampling_opt/blob/main/notebook_demo.ipynb
+
 Steps in bold have been implemented and are part of this codebase, other steps are under development
 
 **1**. Build Deep MSA with jackhmmer for target protein (implemented at https://github.com/GMdSilva/rel_state_pop_af2_raw_data/blob/main/rel_state_populations_af2_msa_generation.ipynb, to be added to main workflow)
    (Step 1 can be skipped if the user prefers to submit their own MSAs)
    
-2. Determine the initial range of max_seq:extra_seq MSA subsampling parameter values based on MSA depth (experimental)
+2. Determine the initial range of max_seq:extra_seq MSA subsampling parameter values based on MSA depth 
 
 **3**. Systematically run AlphaFold2 through the colabfold_batch wrapper with chosen range of max_seq:extra_seq parameter values to make predictions for the target protein, 160 seeds per prediction
 
