@@ -32,7 +32,7 @@ def build_configs_dict():
 
     configs_dict = {
         "SYSTEM_NAME": SYSTEM_NAME,
-        "IS_JUPYTER": IS_JUPYTER(),
+        "IS_JUPYTER": IS_JUPYTER,
         "PREDICTION_ROOT": PREDICTION_ROOT,
         "REINDEX": REINDEX,
         "FIRST_RESIDUE":  FIRST_RESIDUE,
