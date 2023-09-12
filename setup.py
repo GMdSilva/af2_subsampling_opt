@@ -18,9 +18,4 @@ setup(
     long_description='Angra is a python package for predicting '
                 'the relative state distributions of proteins and of their mutants.',
     url='https://github.com/GMdSilva/af2_subsampling_opt',
-    entry_points={
-        'console_scripts': [
-            'my_command=my_package.my_module:my_function',
-        ],
-    },
 )
