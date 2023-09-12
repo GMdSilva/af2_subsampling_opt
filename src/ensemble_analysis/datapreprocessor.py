@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 
-from angra.utilities.utilities import find_ranges
+from src.utilities.utilities import find_ranges
 
 
 class DataPreprocessor:

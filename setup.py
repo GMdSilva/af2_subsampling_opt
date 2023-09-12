@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+print(find_packages)
+
 setup(
     name='angra',
     version='0.1',

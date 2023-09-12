@@ -7,11 +7,11 @@ from typing import List, Union
 
 import numpy as np
 
-from angra.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
-from angra.subsampling_optimization.peakanalyzer import PeakAnalyzer
-from angra.utilities.utilities import load_from_pickle, save_to_pickle, range_to_string
+from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
+from src.subsampling_optimization.peakanalyzer import PeakAnalyzer
+from src.utilities.utilities import load_from_pickle, save_to_pickle, range_to_string
 from user_settings.config import PREDICTION_ROOT
-from angra.utilities.plotter import Plotter
+from src.utilities.plotter import Plotter
 
 
 class PredictionEvaluator:

@@ -12,7 +12,7 @@ import numpy as np
 from MDAnalysis.analysis import align, rms
 
 from user_settings.config import FIRST_RESIDUE, REINDEX, PREDICTION_ROOT
-from angra.utilities.utilities import save_to_pickle, load_from_pickle
+from src.utilities.utilities import save_to_pickle, load_from_pickle
 
 
 class MDAnalysisRunner:

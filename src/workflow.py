@@ -6,13 +6,13 @@ import os
 from typing import Dict, Any
 import logging
 
-from angra.prediction_engine.af2runner import AF2Runner
-from angra.prediction_engine.msabuilder import MSABuilder
-from angra.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
-from angra.mutation_analysis.mutationanalyzer import MutationAnalyzer
-from angra.utilities.utilities import load_from_pickle
-from angra.subsampling_optimization.statefinder import StateFinder
-from angra.mutation_analysis.clustercomparer import ClusterComparer
+from src.prediction_engine.af2runner import AF2Runner
+from src.prediction_engine.msabuilder import MSABuilder
+from src.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
+from src.mutation_analysis.mutationanalyzer import MutationAnalyzer
+from src.utilities.utilities import load_from_pickle
+from src.subsampling_optimization.statefinder import StateFinder
+from src.mutation_analysis.clustercomparer import ClusterComparer
 from user_settings import config
 
 def setup_logging():
