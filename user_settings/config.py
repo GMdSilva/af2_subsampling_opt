@@ -7,8 +7,8 @@ from IPython.display import display, clear_output
 SYSTEM_NAME = 'abl_wt'
 IS_JUPYTER = is_jupyter()
 PREDICTION_ROOT = "."
-REINDEX = False,
-FIRST_RESIDUE = 0
+REINDEX = False
+FIRST_RESIDUE = 1
 MSA_PATHS = ''
 BUILD_MSA = False
 JACKHMMER_PATH = ''
@@ -47,6 +47,18 @@ def build_configs_dict():
     return configs_dict
 
 def update_config(configs_dict):
+    global SYSTEM_NAME,\
+        PREDICTION_ROOT,\
+        FIRST_RESIDUE,\
+        REINDEX,\
+        BUILD_MSA,\
+        RUN_AF2,\
+        OPTIMIZE_PARAMETERS,\
+        TEST_MUTANTS,\
+        JACKHMMER_PATH,\
+        COLABFOLDBATCH_PATH,\
+        MSA_PATHS
+
     SYSTEM_NAME = configs_dict['SYSTEM_NAME']
     PREDICTION_ROOT = configs_dict['PREDICTION_ROOT']
     FIRST_RESIDUE = configs_dict['FIRST_RESIDUE']
