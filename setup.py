@@ -9,7 +9,7 @@ setup(
         'mdanalysis>=2.5.0',
         'numpy>=1.19.2',
         'matplotlib',
-        'scikit-learn=1.3.0',
+        'scikit-learn>=1.3.0',
     ],
     author='Gabriel Monteiro da Silva',
     author_email='gabrielmds@brown.edu',
