@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from scipy.signal import find_peaks
 
-from src.ensemble_analysis.datapreprocessor import DataPreprocessor
+from angra.ensemble_analysis.datapreprocessor import DataPreprocessor
 
 
 class PeakDetector:

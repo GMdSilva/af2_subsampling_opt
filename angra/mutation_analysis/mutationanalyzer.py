@@ -6,11 +6,11 @@ Defines class for analyzing mutations and measuring accuracy
 from typing import Any, Dict, List
 import os
 
-from src.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
-from src.subsampling_optimization.predictionevaluator import PredictionEvaluator
-from src.utilities.utilities import load_from_pickle, save_to_pickle
-from src.utilities.plotter import Plotter
-from src.utilities.utilities import range_to_string
+from angra.subsampling_optimization.subsamplingoptimizer import SubsamplingOptimizer
+from angra.subsampling_optimization.predictionevaluator import PredictionEvaluator
+from angra.utilities.utilities import load_from_pickle, save_to_pickle
+from angra.utilities.plotter import Plotter
+from angra.utilities.utilities import range_to_string
 from user_settings.new_config import load_config
 from user_settings import config
 

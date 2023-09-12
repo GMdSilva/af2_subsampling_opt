@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, List
 import glob
 
-from src.subsampling_optimization.statefinder import StateFinder
+from angra.subsampling_optimization.statefinder import StateFinder
 
 class MutantStateFinder(StateFinder):
     """

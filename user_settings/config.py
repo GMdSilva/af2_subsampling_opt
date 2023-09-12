@@ -1,5 +1,5 @@
 """ User-configured values """
-from src.utilities.utilities import is_jupyter
+from angra.utilities.utilities import is_jupyter
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 

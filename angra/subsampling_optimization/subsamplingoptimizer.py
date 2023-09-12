@@ -9,11 +9,11 @@ import json
 import numpy as np
 
 from user_settings.config import PREDICTION_ROOT, SYSTEM_NAME
-from src.utilities.plotter import Plotter
-from src.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
-from src.subsampling_optimization.peakdetector import PeakDetector
-from src.subsampling_optimization.predictionevaluator import PredictionEvaluator
-from src.utilities.utilities import find_common_ranges_with_wiggle,\
+from angra.utilities.plotter import Plotter
+from angra.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
+from angra.subsampling_optimization.peakdetector import PeakDetector
+from angra.subsampling_optimization.predictionevaluator import PredictionEvaluator
+from angra.utilities.utilities import find_common_ranges_with_wiggle,\
     load_from_pickle,\
     save_to_pickle
 

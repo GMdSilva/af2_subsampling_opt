@@ -16,8 +16,8 @@ from kneed import KneeLocator
 from user_settings.config import SYSTEM_NAME, IS_JUPYTER
 from user_settings.new_config import load_config
 from user_settings.config import PREDICTION_ROOT
-from src.utilities.plotter import Plotter
-from src.mutation_analysis.mutantstatefinder import MutantStateFinder
+from angra.utilities.plotter import Plotter
+from angra.mutation_analysis.mutantstatefinder import MutantStateFinder
 
 
 warnings.filterwarnings("ignore",
