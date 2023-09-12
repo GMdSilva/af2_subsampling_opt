@@ -9,7 +9,7 @@ setup(
         'mdanalysis>=2.5.0',
         'numpy>=1.19.2',
         'matplotlib',
-        'sklearn>=1.3.0',
+        'sklearn',
     ],
     author='Gabriel Monteiro da Silva',
     author_email='gabrielmds@brown.edu',
