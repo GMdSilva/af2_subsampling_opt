@@ -7,19 +7,7 @@ import pickle
 from pathlib import Path
 from typing import Any, List, Tuple
 
-
-def is_jupyter():
-    try:
-        # The `get_ipython` function is available in Jupyter environments, including IPython.
-        shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
-        elif shell == 'TerminalInteractiveShell':
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type
-    except NameError:
-        return False      # Probably standard Python interpreter
+from user_settings.config import SYSTEM_NAME
 
 def load_from_pickle(filename: Path) -> Any:
     """
@@ -175,3 +163,25 @@ def rename_files_recursively(directory_path: str,
 
                     # Print the renaming action for confirmation
                     print(f"Renamed {old_file_path} to {new_file_path}")
+
+
+def get_folder_names(directory):
+    """Return a list of folder names in the specified directory."""
+    return [folder for folder in os.listdir(directory)
+            if os.path.isdir(os.path.join(directory, folder))]
+
+
+def get_folder_metadata(directory):
+    mutations_list = []
+    trials = []
+    for foldername in get_folder_names(directory):
+        if f"{foldername.split('_')[0]}_{foldername.split('_')[1]}" != SYSTEM_NAME:
+            mutations_list.append(f"{foldername.split('_')[0]}_{foldername.split('_')[1]}")
+        else:
+            trials.append((foldername.split("_")[-2],
+                          foldername.split("_")[-1]))
+    analysis_results = {
+        'mutant_data': mutations_list,
+        'trials': trials,
+    }
+    return analysis_results

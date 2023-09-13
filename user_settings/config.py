@@ -1,8 +1,19 @@
 """ User-configured values """
-from src.utilities.utilities import is_jupyter
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 
+def is_jupyter():
+    try:
+        # The `get_ipython` function is available in Jupyter environments, including IPython.
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type
+    except NameError:
+        return False      # Probably standard Python interpreter
 
 SYSTEM_NAME = 'abl_wt'
 IS_JUPYTER = is_jupyter()
