@@ -48,7 +48,7 @@ def run_af2(prefix: str) -> None:
     """
     print("If AlphaFold2 is in path, running predictions.")
     msa_path = os.path.join(config.PREDICTION_ROOT,
-                            '../results',
+                            'results',
                             'msas',
                             f"{prefix}_hmmer.a3m")
     predictor = AF2Runner(prefix, msa_path)
@@ -88,14 +88,14 @@ def test_mutants(prefix: str) -> None:
     print(f"Testing mutants for system {prefix}.")
     analyzer = MutationAnalyzer(prefix)
     results_filename = os.path.join(config.PREDICTION_ROOT,
-                                    '../results',
+                                    'results',
                                     'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
     optimization_results = load_from_pickle(results_filename)
 
     filename = f"{prefix}_mut_analysis_results.pkl"
     results_path = os.path.join(config.PREDICTION_ROOT,
-                                '../results',
+                                'results',
                                 'mutant_analysis',
                                 filename)
 
@@ -119,7 +119,7 @@ def get_representative_structures(prefix: str) -> None:
     all_trials = ['16_32', '32_64', '64_128', '128_256', '256_512', '512_1024']
     finder = StateFinder(prefix, all_trials)
     results_filename = os.path.join(config.PREDICTION_ROOT,
-                                    '../results',
+                                    'results',
                                     'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
 
@@ -130,7 +130,7 @@ def get_representative_structures(prefix: str) -> None:
 def compare_mutation_clusters(prefix):
     print(f"Comparing changes in cluster population for mutations of system {prefix}")
     results_filename = os.path.join(config.PREDICTION_ROOT,
-                                    '../results',
+                                    'results',
                                     'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
     optimization_results = load_from_pickle(results_filename)

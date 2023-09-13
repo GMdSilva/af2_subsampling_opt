@@ -153,7 +153,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
         all_mut_results = []
         file_exists = os.path.isfile(results_path)
 
-        mut_data = load_config('user_settings/mutants.json')
+        mut_data = config.MUTANT_DATA
         mut_data = dict(sorted(mut_data.items(), key=lambda item: item[1]["rank"]))
 
         if file_exists:

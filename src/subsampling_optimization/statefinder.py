@@ -305,9 +305,7 @@ class StateFinder:
         Returns:
         - Dict: Sorted mutation list.
         """
-        mut_list = load_config(os.path.join(config.PREDICTION_ROOT,
-                                            'user_settings',
-                                            'mutants.json'))
+        mut_list = config.MUTANT_DATA
         return dict(sorted(mut_list.items(), key=lambda item: item[1]["rank"]))
 
     @staticmethod

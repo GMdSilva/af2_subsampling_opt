@@ -15,7 +15,7 @@ from kneed import KneeLocator
 
 from user_settings.config import SYSTEM_NAME, IS_JUPYTER
 from user_settings.new_config import load_config
-from user_settings.config import PREDICTION_ROOT
+from user_settings.config import PREDICTION_ROOT, MUTANT_DATA
 from src.utilities.plotter import Plotter
 from src.mutation_analysis.mutantstatefinder import MutantStateFinder
 
@@ -315,7 +315,7 @@ class ClusterComparer(MutantStateFinder):
         Returns:
             Tuple containing sorted mutation data and mutation data names.
         """
-        mut_data = load_config('user_settings/mutants.json')
+        mut_data = config.MUTANT_DATA
         sorted_mut_data = dict(sorted(mut_data.items(), key=lambda item: item[1]["rank"]))
         mut_data_names = [data['label'] for data in sorted_mut_data.values()]
         return sorted_mut_data, mut_data_names
