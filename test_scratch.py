@@ -1,4 +1,5 @@
 from angra.workflow import *
+
 prefix = config.SYSTEM_NAME
 build_msa(prefix)
 optimizer_manager = OptimizerManager(config.SYSTEM_NAME)
