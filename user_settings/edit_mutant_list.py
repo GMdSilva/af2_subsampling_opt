@@ -7,8 +7,8 @@ layout = Layout(width='100%')
 data_dict = {}
 
 # Widgets
-key_widget = widgets.Text(description='Name to save results to (e.g., abl_wt, or abl_f382y):')
-label_widget = widgets.Text(description='Name to add to plots etc. (e.g. Abl1 F382Y, Abl1 E255V + T315I)')
+key_widget = widgets.Text(description='Prefix:')
+label_widget = widgets.Text(description='Name')
 effect_ground_pop_widget = widgets.Dropdown(options=['ref', '+', '-'], description='Effect of the mutation (if known)'
                                                                                    'in the ground state population.'
                                                                                    'ref: reference to contrast to,'
@@ -19,8 +19,8 @@ effect_alt1_pop_widget = widgets.Dropdown(options=['ref', '+', '-'], description
                                                                                    'state population.'
                                                                                    'ref: reference to contrast to,'
                                                                                    '+: increased population,'
-                                                                                   '- decreased population.', layout=layout)
-rank_widget = widgets.IntText(description='Rank:')
+                                                                                   '- decreased population.')
+rank_widget = widgets.IntText(description='Rank: 0')
 
 output = widgets.Output()
 
