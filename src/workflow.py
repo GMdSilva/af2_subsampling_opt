@@ -59,21 +59,20 @@ class OptimizerManager:
 
     def __init__(self, prefix: str):
         self.optimizer = SubsamplingOptimizer(prefix)
-        print("Starting Optimizer")
 
-    def get_parameter_set_variations(self):
-        print(f"Measuring structural regions of significant variation.")
-        significant_ranges = self.optimizer.analyze_predictions('rmsf')
-        return self.optimizer.analyze_parameter_set(significant_ranges)
+    def get_variation_regions(self) -> Dict[str, Any]:
+        return self.optimizer.analyze_predictions('rmsf')
+
+    def get_parameter_set_variations(self, subsampling_results):
+        return self.optimizer.analyze_parameter_set(subsampling_results)
 
     def get_best_parameter_set(self, analyzed_parameter_set) -> Dict[str, Any]:
-        print(f"Ranking parameter sets based on scoring criteria.")
         predictions_path = os.path.join(config.PREDICTION_ROOT,
-                                        '../results',
+                                        'results',
                                         'af2_predictions')
-        parameter_set = self.optimizer.make_final_decision(analyzed_parameter_set, predictions_path)
-        print(f'chosen parameters: {parameter_set}')
-        return parameter_set
+        best_set = self.optimizer.make_final_decision(analyzed_parameter_set,
+                                                      predictions_path)
+        return best_set
 
 
 def test_mutants(prefix: str) -> None:
