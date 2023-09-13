@@ -178,8 +178,7 @@ def get_folder_metadata(directory):
         if f"{foldername.split('_')[0]}_{foldername.split('_')[1]}" != SYSTEM_NAME:
             mutations_list.append(f"{foldername.split('_')[0]}_{foldername.split('_')[1]}")
         else:
-            trials.append((foldername.split("_")[-2],
-                          foldername.split("_")[-1]))
+            trials.append((f"{foldername.split('_')[-2]}_{foldername.split('_')[-1]}"))
     analysis_results = {
         'mutant_data': mutations_list,
         'trials': trials,
