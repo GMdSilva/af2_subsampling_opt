@@ -6,6 +6,7 @@ import os
 import pickle
 from pathlib import Path
 from typing import Any, List, Tuple
+import shutil
 
 from user_settings.config import SYSTEM_NAME, PREDICTION_ROOT
 
@@ -203,5 +204,5 @@ def delete_all_analysis():
     if not os.path.exists(folder):
         print(f"Folder {folder} doesn't exist!")
     else:
-        os.remove(folder)
+        shutil.rmtree('/content/abl_wt_angra_pred/results')
         print(f"Deleted results folder")
