@@ -14,6 +14,12 @@ A suite for automatically detecting the best MSA subsampling parameters for the 
 
 [Collab](https://colab.research.google.com/drive/1t3vlHNad7YJOsGvlKwI6frQRdAV_maEK?authuser=1#scrollTo=F3jUlLQP0rj-)
 
+
+[GMCSF Destabilizing Mutants](https://github.com/GMdSilva/af2_subsampling_opt/blob/main/angra_gmcsf_mutants.ipynb)
+
+
+[Collab](https://colab.research.google.com/drive/1J2OhtToXzHA7c8ISZqKjENE0advXVVyt?authuser=1#scrollTo=N3UN6zg2Im0l)
+
 # Preface:
 
 This is a work in progress. Below is an example of one possible workflow using this method in which no prior information about a protein system is necessary but its sequence and the sequences of its variants of interest.
