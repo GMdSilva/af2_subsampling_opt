@@ -1,5 +1,12 @@
 A suite for automatically detecting the best MSA subsampling parameters for the purpose of predicting changes in the conformational landscapes of proteins in response to mutations with subsampled AlphaFold2
 
+
+# Demo Gallery
+
+[Abl1 Stabilizing and Destabilizing Mutants](https://colab.research.google.com/drive/16O0TEahaPXNPzIZ_IbjyP235Kdrf4ddO#scrollTo=mXsbwGcAO5Eq&uniqifier=1)
+
+[PORB Stabilizing Mutants](https://colab.research.google.com/drive/1t3vlHNad7YJOsGvlKwI6frQRdAV_maEK?authuser=1#scrollTo=F3jUlLQP0rj-)
+
 # Preface:
 
 This is a work in progress. Below is an example of one possible workflow using this method in which no prior information about a protein system is necessary but its sequence and the sequences of its variants of interest.
@@ -41,16 +48,4 @@ Steps in bold have been implemented and are part of this codebase, other steps a
     
 9. Group results based on their effects (if any) to the relative populations of predicted conformations
 
-# Installation Guide:
-
-(work in progress)
-
-We strongly recommend the use of our Google Collab notebook for generating MSAs. Installation for its usage can be found on the notebook itself.
-
 # Demo:
-
-(work in progress)
-
-# Instructions for Reproduction:
-
-(work in progress) 
