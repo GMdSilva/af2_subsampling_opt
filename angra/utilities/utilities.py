@@ -198,11 +198,11 @@ def delete_all_analysis():
     Returns:
     - None
     """
-    folder = os.path.join(PREDICTION_ROOT, "results")
+    folder = os.path.join(PREDICTION_ROOT)
 
         # Check if folder exists
     if not os.path.exists(folder):
         print(f"Folder {folder} doesn't exist!")
     else:
-        shutil.rmtree('/content/abl_wt_angra_pred/')
+        shutil.rmtree(folder)
         print(f"Deleted results folder")
