@@ -3,9 +3,11 @@ A suite for automatically detecting the best MSA subsampling parameters for the 
 
 # Demo Gallery
 
-[Abl1 Stabilizing and Destabilizing Mutants](https://colab.research.google.com/drive/16O0TEahaPXNPzIZ_IbjyP235Kdrf4ddO#scrollTo=mXsbwGcAO5Eq&uniqifier=1)
+[Abl1 Stabilizing and Destabilizing Mutants](https://github.com/GMdSilva/af2_subsampling_opt/blob/main/angra_abl1_mutants.ipynb)
+[Collab](https://colab.research.google.com/drive/16O0TEahaPXNPzIZ_IbjyP235Kdrf4ddO#scrollTo=mXsbwGcAO5Eq&uniqifier=1)
 
-[PORB Stabilizing Mutants](https://colab.research.google.com/drive/1t3vlHNad7YJOsGvlKwI6frQRdAV_maEK?authuser=1#scrollTo=F3jUlLQP0rj-)
+[PORB Stabilizing Mutants](https://github.com/GMdSilva/af2_subsampling_opt/blob/main/angra_porb_mutants.ipynb)
+[Collab](https://colab.research.google.com/drive/1t3vlHNad7YJOsGvlKwI6frQRdAV_maEK?authuser=1#scrollTo=F3jUlLQP0rj-)
 
 # Preface:
 
