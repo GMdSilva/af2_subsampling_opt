@@ -206,7 +206,7 @@ class PeakAnalyzer:
                   f"for parameter {self.trial} rejected: "
                   f"too many alternative conformations modes ({num_modes}).")
             return False
-        if alt1_peak > 15:
+        if alt1_peak > 12:
             print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
                   f"for parameter {self.trial} rejected: RMSD > 15, likely unfolded.")
             return False
