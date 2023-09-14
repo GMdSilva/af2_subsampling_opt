@@ -61,7 +61,7 @@ class OptimizerManager:
         self.optimizer = SubsamplingOptimizer(prefix)
 
     def get_variation_regions(self) -> Dict[str, Any]:
-        self.optimizer.analyze_predictions('rmsf')
+        self.optimizer.analyze_predictions('rmsf', trial='')
 
     def plot_variation_regions(self):
         self.optimizer.plot_rmsf_results()
@@ -144,6 +144,7 @@ def get_representative_structures(prefix: str, all_trials: list) -> None:
                                     'results',
                                     'optimization_results',
                                     f"{prefix}_optimizer_results.pkl")
+
 
     optimization_results = load_from_pickle(results_filename)
     finder.get_refs_and_compare(optimization_results)

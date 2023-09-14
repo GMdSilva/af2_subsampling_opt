@@ -44,9 +44,20 @@ class MutationAnalyzer(SubsamplingOptimizer):
         - differences (Dict[str:float]): Changes to relative state populations
             per mutation.
         """
+
+        results_filename = os.path.join(PREDICTION_ROOT,
+                                       'results',
+                                       'optimization_results',
+                                       f"{SYSTEM_NAME}_optimizer_results.pkl")
+        file_exists = os.path.isfile(results_filename)
+
+        if file_exists:
+            optimizer_results = load_from_pickle(results_filename)
+            trial = optimizer_results['parameters']
+
         residue_range = self.selection
         selection = f'resid {range_to_string(self.selection)} and name CA'
-        self.analyze_predictions('rmsd', selection, bulk=False)
+        self.analyze_predictions('rmsd', trial, selection, bulk=False)
         differences = self.contrast_differences(residue_range, trial)
         return differences
 
@@ -62,7 +73,7 @@ class MutationAnalyzer(SubsamplingOptimizer):
         """
 
         # Extract necessary components from the first trial
-        trial_part1, trial_part2 = trial[0][0].split(':')
+        trial_part1, trial_part2 = trial.split(':')
 
         # Construct control name
         wildtype_filename = (f"{SYSTEM_NAME}_accepted_{trial_part1}_{trial_part2}_"
@@ -97,12 +108,10 @@ class MutationAnalyzer(SubsamplingOptimizer):
         analyzed_modes = evaluator.analyze_distributions(self.subsampling_results,
                                                          residue_range,
                                                          trial)
-
         self.get_control_values(trial, residue_range)
-
         # Extract values from the test and control datasets
-        ground_pop_test = analyzed_modes[trial[0][0]]['ground_pop']
-        alt1_pop_test = analyzed_modes[trial[0][0]]['alt1_pop']
+        ground_pop_test = analyzed_modes[trial]['ground_pop']
+        alt1_pop_test = analyzed_modes[trial]['alt1_pop']
         in_between_pop_test = 1 - ground_pop_test - alt1_pop_test
 
         ground_pop_control = self.wildtype_results['ground_pop']

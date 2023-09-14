@@ -11,7 +11,6 @@ import numpy as np
 from angra.utilities.utilities import load_from_pickle
 from angra.ensemble_analysis.mdanalysisrunner import MDAnalysisRunner
 from angra.utilities.plotter import Plotter
-from user_settings.new_config import load_config
 from user_settings import config
 
 

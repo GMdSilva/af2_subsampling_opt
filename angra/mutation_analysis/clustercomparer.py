@@ -47,6 +47,7 @@ class ClusterComparer(MutantStateFinder):
         self.clustering_difference_results = None
         self.clustering_results = None
         self.plot_cc = plot_cc
+        self.wt_clust_len = 0
 
     def get_wildtype_results(self) -> np.ndarray:
         """
@@ -108,10 +109,12 @@ class ClusterComparer(MutantStateFinder):
         # Using kneed library to find the elbow point
         knee = KneeLocator(k_tests, distortions, curve='convex', direction='decreasing')
         k_optimal = knee.elbow
-
+        #k_optimal = 3
         if k_optimal is None:  # Just in case the kneed method can't find the elbow
+            print("Couldn't find optimal clustering parameters,"
+                  "defaulting to 3 clusters")
             k_optimal = 3
-
+        self.wt_clust_len = k_optimal
         return k_optimal
 
     @staticmethod
@@ -285,8 +288,13 @@ class ClusterComparer(MutantStateFinder):
         Returns:
         - Dictionary containing clusters difference and all clusters.
         """
+
         mut_evaluation = self.evaluate_clusters(clusters_distribution1)
+        print(mut_evaluation)
+        while len(mut_evaluation) < self.wt_clust_len:
+            mut_evaluation = np.append(mut_evaluation, 0)
         mut_evaluation = mut_evaluation[sorted_indices][::-1]
+        print(mut_evaluation)
         clusters_diff = mut_evaluation - wt_evaluation
         return {
             'clusters_diff': clusters_diff,

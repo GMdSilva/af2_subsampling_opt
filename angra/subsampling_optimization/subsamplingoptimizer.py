@@ -66,8 +66,8 @@ class SubsamplingOptimizer:
 
     def analyze_predictions(self,
                             method: str,
+                            trial,
                             selection: str = 'protein and name CA',
-                            trial: str = "256:512",
                             bulk: bool = True) -> list[dict]:
         """
         Analyze a series of sub-sampled AF2 af2_predictions
@@ -92,7 +92,7 @@ class SubsamplingOptimizer:
                                 f"_{trial.split(':')[1]}")
             mdanalyzer = MDAnalysisRunner(path, self.prefix, selection)
             self.subsampling_results = mdanalyzer.process_results(bulk=bulk,
-                                        method=method)
+                                        method=method, trial=trial)
         else:
             path = os.path.join(PREDICTION_ROOT,
                                 'results',
@@ -100,7 +100,8 @@ class SubsamplingOptimizer:
                                 '')
             mdanalyzer = MDAnalysisRunner(path, self.prefix, selection)
             self.subsampling_results = mdanalyzer.process_results(bulk=bulk,
-                                                             method=method)
+                                                             method=method,
+                                                                  trial=trial)
 
     def analyze_parameter_set(self) -> None:
         """

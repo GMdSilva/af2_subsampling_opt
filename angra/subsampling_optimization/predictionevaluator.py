@@ -68,7 +68,6 @@ class PredictionEvaluator:
         """
         analyzed_modes = {}
         analyzed_modes_l = []
-
         path_results = (os.path.join('results',
                         'misc_data',
                         f"{self.prefix}_"
@@ -91,8 +90,6 @@ class PredictionEvaluator:
                     analyzed_mode_data = analyzer.two_state_analysis(mode_data,
                                                                      rmsd_range)
                     analyzed_modes[trials[i]] = analyzed_mode_data
-                else:
-                    raise ValueError('Only 1 mode :(')
                 analyzed_modes_l.append(mode_data)
             self.analyzed_modes_l = analyzed_modes_l
             results = [analyzed_modes, analyzed_modes_l]
@@ -100,14 +97,14 @@ class PredictionEvaluator:
             return analyzed_modes
 
         analyzed_modes = {}
-        analyzer = PeakAnalyzer(self.prefix, trials[0][0])
+        analyzer = PeakAnalyzer(self.prefix, trials)
         bandwidth = analyzer.get_silverman_bandwidth(distributions[0]['results'])
         mode_data = analyzer.analyze_modes(distributions[0]['results'],
                                            bandwidth)
         if mode_data['num_modes'] > 1:
             analyzed_mode_data = analyzer.two_state_analysis(mode_data,
                                                              rmsd_range)
-            analyzed_modes[trials[0][0]] = analyzed_mode_data
+            analyzed_modes[trials] = analyzed_mode_data
         return analyzed_modes
 
     @staticmethod
@@ -212,7 +209,8 @@ class PredictionEvaluator:
             selection = f'resid {range_to_string(peak_range)} and name CA'
             mdarunner = MDAnalysisRunner(path, self.prefix, selection)
             subsampling_results = mdarunner.process_results(bulk=True,
-                                                            method='rmsd')
+                                                            method='rmsd',
+                                                            trial='')
 
             result_dict_partial = {
                 'results': [d['results'] for d in subsampling_results if 'results' in d],

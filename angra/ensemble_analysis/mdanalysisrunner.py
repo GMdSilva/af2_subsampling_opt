@@ -148,8 +148,9 @@ class MDAnalysisRunner:
             return True
         return False
 
-    def process_results(self, bulk: bool = True,
-                        trial: str = '256:512',
+    def process_results(self,
+                        trial,
+                        bulk: bool = True,
                         method: str = 'rmsd',
                         label: str = None) -> dict:
         """
