@@ -15,7 +15,7 @@ def is_jupyter():
     except NameError:
         return False      # Probably standard Python interpreter
 
-SYSTEM_NAME = 'porb_wt'
+SYSTEM_NAME = 'gmcsf_wt'
 IS_JUPYTER = is_jupyter()
 PREDICTION_ROOT = "."
 REINDEX = False
@@ -42,20 +42,20 @@ TEST_MUTANTS = True
 #     "abl_M290LandL301I": {"label": "Abl1 M290L+301I", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 10}
 # }
 
-# MUTANT_DATA = {
-#     "jen_wt": {"label": "GMCSF", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
-#     "jen_mut1": {"label": "GMCSF H15Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 1},
-#     "jen_mut2": {"label": "GMCSF H83Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 2},
-#     "jen_mut5": {"label": "GMCSF H15R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 3},
-#     "jen_mut10": {"label": "GMCSF H87R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 4},
-# }
-
 MUTANT_DATA = {
-    "porb_wt": {"label": "PORB", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
-    "porb_d122n": {"label": "PORB D122N", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0},
-    "porb_e318n": {"label": "PORB E318N", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0},
-    "porb_s312e": {"label": "PORB S312E", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0}
+    "gmcsf_wt": {"label": "GMCSF", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
+    "gmcsf_h15y": {"label": "GMCSF H15Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 1},
+    "gmcsf_h83y": {"label": "GMCSF H83Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 2},
+    "gmcsf_h15r": {"label": "GMCSF H15R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 3},
+    "gmcsf_h87r": {"label": "GMCSF H87R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 4},
 }
+
+# MUTANT_DATA = {
+#     "porb_wt": {"label": "PORB", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
+#     "porb_d122n": {"label": "PORB D122N", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0},
+#     "porb_e318n": {"label": "PORB E318N", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0},
+#     "porb_s312e": {"label": "PORB S312E", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0}
+# }
 
 
 def build_configs_dict():

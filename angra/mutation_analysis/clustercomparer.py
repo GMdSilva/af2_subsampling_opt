@@ -290,11 +290,9 @@ class ClusterComparer(MutantStateFinder):
         """
 
         mut_evaluation = self.evaluate_clusters(clusters_distribution1)
-        print(mut_evaluation)
         while len(mut_evaluation) < self.wt_clust_len:
             mut_evaluation = np.append(mut_evaluation, 0)
         mut_evaluation = mut_evaluation[sorted_indices][::-1]
-        print(mut_evaluation)
         clusters_diff = mut_evaluation - wt_evaluation
         return {
             'clusters_diff': clusters_diff,
