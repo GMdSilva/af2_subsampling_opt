@@ -18,7 +18,7 @@ A suite for automatically detecting the best MSA subsampling parameters for the 
 [GMCSF Destabilizing Mutants](https://github.com/GMdSilva/af2_subsampling_opt/blob/main/angra_gmcsf_mutants.ipynb)
 
 
-[Collab](https://colab.research.google.com/drive/13cDi_TSTT3n7wHRzn8rS_G5aPcQuWLvg?usp=sharing)
+[Collab](https://colab.research.google.com/drive/13cDi_TSTT3n7wHRzn8rS_G5aPcQuWLvg?authuser=1#scrollTo=_Oi8C5iIL2Kn)
 
 # Preface:
 
