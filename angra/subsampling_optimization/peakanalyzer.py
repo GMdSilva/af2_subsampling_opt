@@ -201,6 +201,12 @@ class PeakAnalyzer:
         num_modes = modality_results['num_modes']
         ground_peak = modality_results['ground_peak']
         alt1_peak = modality_results['alt1_peak']
+        max_value = modality_results['distribution'].max()
+        if max_value > 17:
+            print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
+                  f"for parameter {self.trial} rejected: "
+                  f"RMSD distribution too wide, likely unfolded. Max RMSD value: ({max_value}).")
+            return False
         if not 1 <= num_modes <= 3:
             print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
                   f"for parameter {self.trial} rejected: "
@@ -208,13 +214,18 @@ class PeakAnalyzer:
             return False
         if alt1_peak > 12:
             print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
-                  f"for parameter {self.trial} rejected: RMSD > 15, likely unfolded.")
+                  f"for parameter {self.trial} rejected: RMSD > 12, likely unfolded.")
             return False
         if ground_peak > alt1_peak:
             print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
                   f"for parameter {self.trial} rejected: "
                   f"ground conformation has higher RMSD than alt1 conformation.")
             return False
+        # if alt1_peak - ground_peak < 1.5:
+        #     print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
+        #           f"for parameter {self.trial} rejected: "
+        #           f"Ground conformation too close to Alt1 conformation.")
+        #     return False
 
         print(f"Peak range {rmsd_range} with Alt1 RMSD of {alt1_peak:.3g} A "
               f"for parameter {self.trial} accepted ")

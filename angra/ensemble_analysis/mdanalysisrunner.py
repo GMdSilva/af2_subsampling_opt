@@ -121,8 +121,7 @@ class MDAnalysisRunner:
         trial = folder.split('_')
         return f'{trial[-2]}:{trial[-1]}'
 
-    @staticmethod
-    def load_trajectory(path: str) -> mda.Universe:
+    def load_trajectory(self, path: str) -> mda.Universe:
         """
         Load a trajectory from a collection of PDB files using MDAnalysis.
 
@@ -139,7 +138,6 @@ class MDAnalysisRunner:
         if REINDEX:
             for i, residue in enumerate(traj.residues, start=FIRST_RESIDUE):
                 residue.resid = i
-
         return traj
 
     @staticmethod
@@ -151,8 +149,7 @@ class MDAnalysisRunner:
     def process_results(self,
                         trial,
                         bulk: bool = True,
-                        method: str = 'rmsd',
-                        label: str = None) -> dict:
+                        method: str = 'rmsd') -> dict:
         """
         Performs bulk analysis on multiple directories.
 

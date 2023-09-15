@@ -42,9 +42,9 @@ class SubsamplingOptimizer:
         self.subsampling_results = None
 
     def get_final_ranges(self,
-                         window_size: int = 5,
-                         peak_thresh: int = 5,
-                         peak_n: int = 3) -> List[Tuple[int, int]]:
+                         window_size: int = 10,
+                         peak_thresh: int = 2,
+                         peak_n: int = 4) -> List[Tuple[int, int]]:
         """
         Gets final ranges from subsampling results.
 
@@ -58,7 +58,10 @@ class SubsamplingOptimizer:
         - List of tuple ranges indicating the final expanded ranges.
         """
         all_ranges = []
+
         for result in self.subsampling_results:
+            res_len = result['residues'].max()
+            window_size = int((res_len*0.05))
             detector = PeakDetector(result)
             peak_range = detector.detect_peaks(window_size, peak_thresh, peak_n)
             all_ranges.append(peak_range)

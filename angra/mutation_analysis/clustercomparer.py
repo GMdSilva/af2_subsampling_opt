@@ -109,7 +109,7 @@ class ClusterComparer(MutantStateFinder):
         # Using kneed library to find the elbow point
         knee = KneeLocator(k_tests, distortions, curve='convex', direction='decreasing')
         k_optimal = knee.elbow
-        #k_optimal = 3
+        k_optimal = 3
         if k_optimal is None:  # Just in case the kneed method can't find the elbow
             print("Couldn't find optimal clustering parameters,"
                   "defaulting to 3 clusters")

@@ -90,7 +90,6 @@ def find_common_ranges_with_wiggle(all_ranges: List[List[Tuple[int, int]]],
         for curr_range in curr_ranges:
             overlaps.update({r for r in common_ranges if ranges_overlap(r, curr_range, wiggle)})
         common_ranges &= overlaps
-
     return list(common_ranges)
 
 

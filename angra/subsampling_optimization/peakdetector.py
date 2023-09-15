@@ -124,10 +124,10 @@ class PeakDetector:
         return peak_ranges
 
     def detect_peaks(self,
-                     window_size: int = 5,
-                     peak_thresh: int = 3,
-                     peak_n: int = 5,
-                     smooth: bool = False) -> List[Tuple[int, int]]:
+                     window_size,
+                     peak_thresh,
+                     peak_n,
+                     smooth: bool = True) -> List[Tuple[int, int]]:
         """
         Detects peaks from given observable analysis results
 

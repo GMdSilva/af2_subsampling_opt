@@ -56,7 +56,7 @@ class DataPreprocessor:
             "upper_bound": upper_bound
         }
 
-    def get_mvavg(self, window_size: int = 10) -> np.array:
+    def get_mvavg(self, window_size) -> np.array:
         """
         Compute the moving average of a given data set using a specified window size.
 
@@ -72,7 +72,7 @@ class DataPreprocessor:
         moving_avg = full_convolution[window_size - 1:]
         return moving_avg
 
-    def process_data(self, win_size: int = 10) -> Dict[str, Union[np.array, List[float], float]]:
+    def process_data(self, win_size) -> Dict[str, Union[np.array, List[float], float]]:
         """
         Process the provided data by removing outliers and computing its moving average.
 

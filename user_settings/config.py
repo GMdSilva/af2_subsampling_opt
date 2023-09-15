@@ -15,7 +15,7 @@ def is_jupyter():
     except NameError:
         return False      # Probably standard Python interpreter
 
-SYSTEM_NAME = 'gmcsf_wt'
+SYSTEM_NAME = 'lmrp_wt'
 IS_JUPYTER = is_jupyter()
 PREDICTION_ROOT = "."
 REINDEX = False
@@ -41,15 +41,15 @@ TEST_MUTANTS = True
 #     "abl_M290L": {"label": "Abl1 M290L", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 9},
 #     "abl_M290LandL301I": {"label": "Abl1 M290L+301I", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 10}
 # }
-
-MUTANT_DATA = {
-    "gmcsf_wt": {"label": "GMCSF", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
-    "gmcsf_h15y": {"label": "GMCSF H15Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 1},
-    "gmcsf_h83y": {"label": "GMCSF H83Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 2},
-    "gmcsf_h15r": {"label": "GMCSF H15R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 3},
-    "gmcsf_h87r": {"label": "GMCSF H87R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 4},
-}
-
+#
+# MUTANT_DATA = {
+#     "gmcsf_wt": {"label": "GMCSF", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
+#     "gmcsf_h15y": {"label": "GMCSF H15Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 1},
+#     "gmcsf_h83y": {"label": "GMCSF H83Y", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 2},
+#     "gmcsf_h15r": {"label": "GMCSF H15R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 3},
+#     "gmcsf_h87r": {"label": "GMCSF H87R", "effect": {"ground_pop":"-", "alt1_pop":"+"}, "rank": 4},
+# }
+#
 # MUTANT_DATA = {
 #     "porb_wt": {"label": "PORB", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
 #     "porb_d122n": {"label": "PORB D122N", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0},
@@ -57,6 +57,9 @@ MUTANT_DATA = {
 #     "porb_s312e": {"label": "PORB S312E", "effect": {"ground_pop": "+", "alt1_pop": "-"}, "rank": 0}
 # }
 
+MUTANT_DATA = {
+     "lmrp_wt": {"label": "LMRP", "effect": {"ground_pop":"ref", "alt1_pop":"ref"}, "rank": 0},
+ }
 
 def build_configs_dict():
     global SYSTEM_NAME,\

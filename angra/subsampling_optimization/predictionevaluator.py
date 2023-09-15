@@ -26,6 +26,7 @@ class PredictionEvaluator:
         self.prefix = prefix
         self.analyzed_modes_l = None
         self.rmsd_range = None
+        self.accepted_dists = []
 
     @staticmethod
     def in_between_spacing_metric(data: Union[List[float], np.ndarray],
@@ -76,6 +77,7 @@ class PredictionEvaluator:
                         f"modes_all_trials.pkl"))
 
         if os.path.isfile(path_results):
+            print('loading file')
             saved_results = load_from_pickle(path_results)
             analyzed_modes = saved_results[0]
             self.analyzed_modes_l = saved_results[1]
@@ -120,12 +122,13 @@ class PredictionEvaluator:
         """
         intermediate_coverage = PredictionEvaluator.in_between_spacing_metric(
             mode_data['distribution'],
-            mode_data['modes'][1],
-            mode_data['modes'][0]
+            mode_data['modes'][-1],
+            mode_data['modes'][-2]
         )
         combined_population = mode_data['ground_pop'] + mode_data['alt1_pop']
         distance_between_states = mode_data['dist_ground_alt1']
-        score = (intermediate_coverage + distance_between_states) / combined_population
+
+        score = (intermediate_coverage + distance_between_states)/combined_population
         return score
 
     def find_largest_score(self,
@@ -153,6 +156,8 @@ class PredictionEvaluator:
             if analyzer.mode_sanity_checks(mode_data, rmsd_range):
                 score = self.calculate_metrics(mode_data)
                 scores[trial] = score
+                formatted_score = "{:.2e}".format(score)
+                self.accepted_dists.append([trial, rmsd_range, formatted_score])
 
         if scores:
             max_score_trial = max(scores, key=scores.get)
@@ -261,11 +266,17 @@ class PredictionEvaluator:
         """
 
         results = self.test_different_peaks(final_ranges, path)
+        scores = [d['score'] for d in results if 'score' in d]
+        acc_path = os.path.join(PREDICTION_ROOT,
+                                'results',
+                                "optimization_results",
+                                f"{self.prefix}_accepted_trials.pkl")
+        save_to_pickle(acc_path, self.accepted_dists)
 
         all_same_results = all(x['chosen_parameters']
                                == results[0]['chosen_parameters']
                                for x in results)
-        scores = [d['score'] for d in results if 'score' in d]
+
 
         if all_same_results and results[0]['chosen_parameters'] == 'failed':
             print('Failed :(')

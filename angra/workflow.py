@@ -128,7 +128,7 @@ class MutantTester:
         self.analyzer.plot_mut_results()
 
 
-def get_representative_structures(prefix: str, all_trials: list) -> None:
+def get_representative_structures(prefix: str) -> None:
     """
     Handles mutation testing for a given prefix and optimized parameters.
 
@@ -139,7 +139,7 @@ def get_representative_structures(prefix: str, all_trials: list) -> None:
         None
     """
     print(f"Getting representative structures for system {prefix}.")
-    finder = StateFinder(prefix, all_trials)
+    finder = StateFinder(prefix)
     results_filename = os.path.join(config.PREDICTION_ROOT,
                                     'results',
                                     'optimization_results',

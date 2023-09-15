@@ -19,7 +19,7 @@ class StateFinder:
     Class for analyzing mutations and measuring accuracy at predicting the effects
     of mutations in the ground or alternative states.
     """
-    def __init__(self, prefix: str, all_trials: None):
+    def __init__(self, prefix: str):
         """
         Initializes the MutationAnalyzer class.
 
@@ -27,9 +27,28 @@ class StateFinder:
             prefix (str): Name of the protein being studied.
         """
         self.prefix = prefix
+        file = load_from_pickle(os.path.join(config.PREDICTION_ROOT,
+                                                        'results',
+                                                        "optimization_results",
+                                                        f"{self.prefix}_accepted_trials.pkl"))
         self.selection: str = 'protein and name CA'
         self.trial: str = None
-        self.all_trials: list = all_trials
+
+        d = {}
+        for sublist in file:
+            key = sublist[0]
+            if key not in d or sublist[2] > d[key][2]:
+                d[key] = sublist
+
+        result = list(d.values())
+
+        self.all_trials = [sublist[0] for sublist in result]
+        all_scores = [sublist[2] for sublist in result]
+
+        self.annot = []
+        for score in all_scores:
+            self.annot.append(f"Score: {score}")
+
 
     def get_variables(self, optimization_results: Dict[str, Any]) -> None:
         """
@@ -55,7 +74,6 @@ class StateFinder:
             f"{self.prefix}_accepted_{self.trial}"
             f"_range_{self.selection}.pkl")
         peak_calling_results = load_from_pickle(peak_calling_path)
-
         rmsd_path = os.path.join(
             config.PREDICTION_ROOT,
             'results',
@@ -65,14 +83,13 @@ class StateFinder:
 
         # Finding index for ground
         index_ground = StateFinder._find_closest_index(
-            rmsd_results['results'], peak_calling_results['modes'][1])
-        prediction_ground = rmsd_results['residues'][index_ground-1]
+            rmsd_results['results'], peak_calling_results['modes'][-1])
+        prediction_ground = rmsd_results['residues'][index_ground]
 
         # Finding index for alt
         index_alt = StateFinder._find_closest_index(
-            rmsd_results['results'], peak_calling_results['modes'][0])
-        prediction_alt1 = rmsd_results['residues'][index_alt-1]
-
+            rmsd_results['results'], peak_calling_results['modes'][-2])
+        prediction_alt1 = rmsd_results['residues'][index_alt]
         return {'ground_ref_index': int(prediction_ground),
                 'alt1_ref_index': int(prediction_alt1)}
 
@@ -136,6 +153,7 @@ class StateFinder:
         Returns:
             str: The constructed file path.
         """
+        index += 1
         formatted_index = str(index).zfill(3)
         return os.path.join('results', 'af2_predictions',
                             f"{self.prefix}_{self.trial}",
@@ -185,8 +203,7 @@ class StateFinder:
                                           ref_name=ref)
                 res = runner.process_results(bulk=False,
                                              trial=trial,
-                                             method='rmsd_ref',
-                                             label=label)
+                                             method='rmsd_ref')
             results[prefix] = res
         return results
 
@@ -219,8 +236,7 @@ class StateFinder:
                                           ref_name=ref)
                 res = runner.process_results(bulk=False,
                                              trial=trial_r,
-                                             method='rmsd_ref',
-                                             label=label)
+                                             method='rmsd_ref')
             results[trial] = res
         return results
 
@@ -236,7 +252,6 @@ class StateFinder:
         """
         results_tuples, ranks = [], []
         labels = StateFinder._get_mutation_names()
-        effects = StateFinder._get_effects()
         for trial in self.all_trials:
             result_tuple = (rmsd_dict['ground'][trial][0]['results'],
                             rmsd_dict['alt1'][trial][0]['results'])
@@ -246,8 +261,7 @@ class StateFinder:
 
         return {'results_tuples': results_tuples,
                 'results_ranks': ranks,
-                'results_labels': self.all_trials,
-                'results_effects': effects}
+                'results_labels': self.all_trials}
 
     def _build_results_dict(self, rmsd_dict: Dict) -> Dict:
         """
@@ -335,7 +349,6 @@ class StateFinder:
                 effects.append(f"Ground: {effect['ground_pop']} Alt1: {effect['alt1_pop']}")
             else:
                 effects.append('')
-
         return effects
 
     @staticmethod
@@ -382,7 +395,7 @@ class StateFinder:
         plotter = Plotter(self.prefix, results_dict['results_tuples'])
         plotter.plot_multiple_scatter(data_list=results_dict['results_tuples'],
                                       labels=results_dict['results_labels'],
-                                      annotations=results_dict['results_effects'],
+                                      annotations=self.annot,
                                       colors=results_dict['results_ranks'],
                                       filename='ground_vs_alt1_plddt_ranked_trials',
                                       colorbar_label='Ranking')
